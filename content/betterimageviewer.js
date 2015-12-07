@@ -1,5 +1,6 @@
 let BetterImageViewer = {
 	_currentZoom: 0,
+	_zoomedToFit: false,
 	_lastMousePosition: null,
 	_justScrolled: false,
 	init: function() {
@@ -11,12 +12,14 @@ let BetterImageViewer = {
 		this.image.addEventListener('click', this);
 		addEventListener('mousedown', this);
 		addEventListener('wheel', this);
+		addEventListener('resize', this);
 	},
 	get zoom() {
 		return this._currentZoom;
 	},
 	set zoom(z) {
 		this._currentZoom = z;
+		this._zoomedToFit = false;
 		this.image.width = Math.pow(2, z / 4) * this.image.naturalWidth;
 		this.image.height = Math.pow(2, z / 4) * this.image.naturalHeight;
 
@@ -33,6 +36,7 @@ let BetterImageViewer = {
 		let minZoomX = Math.floor((Math.log2(document.body.clientWidth) - Math.log2(this.image.naturalWidth)) * 4);
 		let minZoomY = Math.floor((Math.log2(document.body.clientHeight) - Math.log2(this.image.naturalHeight)) * 4);
 		this.zoom = Math.min(minZoomX, minZoomY, 0);
+		this._zoomedToFit = true;
 		document.body.style.overflow = null;
 	},
 	toggleBackground: function() {
@@ -98,6 +102,11 @@ let BetterImageViewer = {
 			this._lastMousePosition = null;
 			removeEventListener('mousemove', this);
 			removeEventListener('mouseup', this);
+			break;
+		case 'resize':
+			if (this._zoomedToFit) {
+				this.zoomToFit();
+			}
 			break;
 		}
 	}
