@@ -1,5 +1,7 @@
 let BetterImageViewer = {
 	_currentZoom: 0,
+	_lastMousePosition: null,
+	_justScrolled: false,
 	init: function() {
 		this.image = document.body.firstElementChild;
 		this.image.style.backgroundColor = 'transparent';
@@ -7,6 +9,7 @@ let BetterImageViewer = {
 
 		this.image.addEventListener('load', this);
 		this.image.addEventListener('click', this);
+		addEventListener('mousedown', this);
 		addEventListener('wheel', this);
 	},
 	get zoom() {
@@ -47,6 +50,10 @@ let BetterImageViewer = {
 			this.zoomToFit();
 			break;
 		case 'click':
+			if (!!this._justScrolled) {
+				this._justScrolled = false;
+				return;
+			}
 			if (this.zoom === 0) {
 				this.zoomToFit();
 				return;
@@ -69,6 +76,28 @@ let BetterImageViewer = {
 			document.body.scrollTo(bcr.width * x - event.clientX, bcr.height * y - event.clientY);
 
 			event.preventDefault();
+			break;
+		case 'mousedown':
+			this._lastMousePosition = { x: event.clientX, y: event.clientY };
+			addEventListener('mousemove', this);
+			addEventListener('mouseup', this);
+			event.preventDefault();
+			break;
+		case 'mousemove':
+			let dX = this._lastMousePosition.x - event.clientX;
+			let dY = this._lastMousePosition.y - event.clientY;
+			if ((dX * dX + dY * dY) < 25) {
+				return;
+			}
+			document.body.scrollBy(dX, dY);
+			this._lastMousePosition = { x: event.clientX, y: event.clientY };
+			this._justScrolled = true;
+			event.preventDefault();
+			break;
+		case 'mouseup':
+			this._lastMousePosition = null;
+			removeEventListener('mousemove', this);
+			removeEventListener('mouseup', this);
 			break;
 		}
 	}
