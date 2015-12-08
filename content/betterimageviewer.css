@@ -1,0 +1,37 @@
+#toolbar {
+	position: fixed;
+	top: 0px;
+	bottom: 0px;
+	left: 0px;
+	width: 100px;
+	background-image: linear-gradient(to right, rgba(0, 0, 0, 0.75), transparent);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	opacity: 0;
+	transition: opacity 250ms;
+}
+#toolbar:hover {
+	opacity: 1;
+}
+#toolbar > button {
+	background-color: transparent;
+	border: none;
+	width: 64px;
+	height: 64px;
+	margin: 4px 0;
+	cursor: pointer;
+}
+#zoomIn {
+	background-image: url("chrome://betterimageviewer/content/zoomIn.svg");
+}
+#zoomOut {
+	background-image: url("chrome://betterimageviewer/content/zoomOut.svg");
+}
+#zoom1 {
+	background-image: url("chrome://betterimageviewer/content/zoom1.svg");
+}
+#zoomFit {
+	background-image: url("chrome://betterimageviewer/content/zoomFit.svg");
+}

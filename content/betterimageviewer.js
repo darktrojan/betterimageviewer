@@ -10,9 +10,19 @@ let BetterImageViewer = {
 
 		this.image.addEventListener('load', this);
 		this.image.addEventListener('click', this);
-		addEventListener('mousedown', this);
+		document.body.addEventListener('mousedown', this);
 		addEventListener('wheel', this);
 		addEventListener('resize', this);
+
+		let toolbar = document.createElement('div');
+		toolbar.id = 'toolbar';
+		for (let tool of ['zoomIn', 'zoomOut', 'zoom1', 'zoomFit']) {
+			let button = document.createElement('button');
+			button.id = tool;
+			toolbar.appendChild(button);
+		}
+		document.body.appendChild(toolbar);
+		toolbar.addEventListener('click', this);
 	},
 	get zoom() {
 		return this._currentZoom;
@@ -57,6 +67,22 @@ let BetterImageViewer = {
 			if (!!this._justScrolled) {
 				this._justScrolled = false;
 				return;
+			}
+			if (event.target instanceof HTMLButtonElement) {
+				switch (event.target.id) {
+				case 'zoomIn':
+					this.zoom++;
+					return;
+				case 'zoomOut':
+					this.zoom--;
+					return;
+				case 'zoom1':
+					this.zoom = 0;
+					return;
+				case 'zoomFit':
+					this.zoomToFit();
+					return;
+				}
 			}
 			if (this.zoom === 0) {
 				this.zoomToFit();

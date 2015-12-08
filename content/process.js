@@ -37,6 +37,11 @@ let listener = {
 			return;
 		}
 
+		let l = doc.createElement('link');
+		l.setAttribute('rel', 'stylesheet');
+		l.setAttribute('href', 'chrome://betterimageviewer/content/betterimageviewer.css');
+		doc.head.appendChild(l);
+
 		let s = doc.createElement('script');
 		s.setAttribute('src', 'chrome://betterimageviewer/content/betterimageviewer.js');
 		s.setAttribute('type', 'application/javascript;version=1.8');
