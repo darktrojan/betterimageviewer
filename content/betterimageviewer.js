@@ -8,7 +8,11 @@ let BetterImageViewer = {
 		this.image.style.backgroundColor = 'transparent';
 		this.image.style.backgroundImage = 'none';
 
-		this.image.addEventListener('load', this);
+		if (this.image.complete) {
+			this.zoomToFit();
+		} else {
+			this.image.addEventListener('load', this);
+		}
 		this.image.addEventListener('click', this);
 		document.body.addEventListener('mousedown', this);
 		addEventListener('wheel', this);
@@ -42,12 +46,10 @@ let BetterImageViewer = {
 		}
 	},
 	zoomToFit: function() {
-		document.body.style.overflow = 'hidden';
-		let minZoomX = Math.floor((Math.log2(document.body.clientWidth) - Math.log2(this.image.naturalWidth)) * 4);
-		let minZoomY = Math.floor((Math.log2(document.body.clientHeight) - Math.log2(this.image.naturalHeight)) * 4);
+		let minZoomX = Math.floor((Math.log2(innerWidth) - Math.log2(this.image.naturalWidth)) * 4);
+		let minZoomY = Math.floor((Math.log2(innerHeight) - Math.log2(this.image.naturalHeight)) * 4);
 		this.zoom = Math.min(minZoomX, minZoomY, 0);
 		this._zoomedToFit = true;
-		document.body.style.overflow = null;
 	},
 	toggleBackground: function() {
 		if (!document.body.style.backgroundImage) {
