@@ -10,9 +10,8 @@ let BetterImageViewer = {
 
 		if (this.image.complete) {
 			this.zoomToFit();
-		} else {
-			this.image.addEventListener('load', this);
 		}
+		this.image.addEventListener('load', this);
 		this.image.addEventListener('click', this);
 		document.body.addEventListener('mousedown', this);
 		addEventListener('wheel', this);
