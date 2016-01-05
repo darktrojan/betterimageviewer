@@ -3,11 +3,11 @@
 
 	<Description about="urn:mozilla:install-manifest">
 		<em:id>betterimageviewer@darktrojan.net</em:id>
-		<em:version>4</em:version>
+		<em:version>5</em:version>
 		<em:type>2</em:type>
 		<em:bootstrap>true</em:bootstrap>
 		<em:name>Better Image Viewer</em:name>
-		<em:description></em:description>
+		<em:description>Enhances Firefox's image viewer with scroll-to-zoom and drag-to-pan functionality.</em:description>
 		<em:creator>Geoff Lankow</em:creator>
 
 		<em:targetApplication>

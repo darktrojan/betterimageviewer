@@ -37,6 +37,10 @@ let listener = {
 			return;
 		}
 
+		doc.addEventListener('error', function(event) {
+			Components.utils.reportError(event);
+		});
+
 		let l = doc.createElement('link');
 		l.setAttribute('rel', 'stylesheet');
 		l.setAttribute('href', 'chrome://betterimageviewer/content/betterimageviewer.css');
