@@ -1,3 +1,7 @@
+img {
+	background-color: transparent;
+	background-image: none;
+}
 #toolbar {
 	position: fixed;
 	top: 0px;

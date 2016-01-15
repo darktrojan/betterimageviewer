@@ -1,6 +1,8 @@
 /* globals Components, Services, addMessageListener, removeMessageListener */
 Components.utils.import('resource://gre/modules/Services.jsm');
 
+let viewers = new Set();
+
 let listener = {
 	_messages: [
 		'BetterImageViewer:disable'
@@ -23,6 +25,9 @@ let listener = {
 		for (let n of this._notifications) {
 			Services.obs.removeObserver(this, n, false);
 		}
+		for (let v of viewers) {
+			v.destroy();
+		}
 	},
 	receiveMessage: function(message) {
 		switch (message.name) {
@@ -37,7 +42,7 @@ let listener = {
 			return;
 		}
 
-		new BetterImageViewer(doc);
+		viewers.add(new BetterImageViewer(doc));
 	}
 };
 listener.init();
@@ -58,6 +63,7 @@ BetterImageViewer.prototype = {
 	_lastMousePosition: null,
 	_justScrolled: false,
 	init: function() {
+		this._win.addEventListener('unload', this);
 		this._doc.addEventListener('error', this);
 
 		this._link = this._doc.createElement('link');
@@ -66,8 +72,6 @@ BetterImageViewer.prototype = {
 		this._doc.head.appendChild(this._link);
 
 		this.image = this._body.firstElementChild;
-		this.image.style.backgroundColor = 'transparent';
-		this.image.style.backgroundImage = 'none';
 
 		if (this.image.complete) {
 			this.zoomToFit();
@@ -87,6 +91,9 @@ BetterImageViewer.prototype = {
 		}
 		this._body.appendChild(toolbar);
 		toolbar.addEventListener('click', this);
+	},
+	destroy: function() {
+		this._win.location.reload();
 	},
 	get zoom() {
 		return this._currentZoom;
@@ -122,6 +129,9 @@ BetterImageViewer.prototype = {
 	},
 	handleEvent: function(event) {
 		switch (event.type) {
+		case 'unload':
+			viewers.delete(this);
+			break;
 		case 'error':
 			Components.utils.reportError(event);
 			break;
