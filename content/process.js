@@ -112,6 +112,11 @@ BetterImageViewer.prototype = {
 		} else if (z < 0) {
 			this.image.classList.add('shrinkToFit');
 		}
+		if (this.image.height > this._body.clientHeight) {
+			this.image.classList.add('overflowingVertical');
+		} else {
+			this.image.classList.remove('overflowingVertical');
+		}
 	},
 	zoomToFit: function() {
 		let minZoomX = Math.floor((Math.log2(this._win.innerWidth) - Math.log2(this.image.naturalWidth)) * 4);
