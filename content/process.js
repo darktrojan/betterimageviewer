@@ -80,6 +80,7 @@ BetterImageViewer.prototype = {
 		this.image.addEventListener('click', this);
 		this._body.addEventListener('mousedown', this);
 		this._win.addEventListener('wheel', this);
+		this._win.addEventListener('keypress', this);
 		this._win.addEventListener('resize', this);
 
 		let toolbar = this._doc.createElement('div');
@@ -203,6 +204,18 @@ BetterImageViewer.prototype = {
 			this._lastMousePosition = null;
 			this._win.removeEventListener('mousemove', this);
 			this._win.removeEventListener('mouseup', this);
+			break;
+		case 'keypress':
+			switch (event.code) {
+			case 'Minus':
+			case 'NumpadSubtract':
+				this.zoom--;
+				break;
+			case 'Equal':
+			case 'NumpadAdd':
+				this.zoom++;
+				break;
+			}
 			break;
 		case 'resize':
 			if (this._zoomedToFit) {
