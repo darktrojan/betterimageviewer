@@ -215,10 +215,16 @@ BetterImageViewer.prototype = {
 			case 'Minus':
 			case 'NumpadSubtract':
 				this.zoom--;
+				event.preventDefault();
 				break;
 			case 'Equal':
 			case 'NumpadAdd':
 				this.zoom++;
+				event.preventDefault();
+				break;
+			case 'Digit0':
+				this.zoomToFit();
+				event.preventDefault();
 				break;
 			}
 			break;
