@@ -124,6 +124,15 @@ BetterImageViewer.prototype = {
 		this.zoom = Math.min(minZoomX, minZoomY, 0);
 		this._zoomedToFit = true;
 	},
+	zoomCentered: function(z) {
+		let { clientWidth, clientHeight } = this._doc.body;
+		let bcr = this.image.getBoundingClientRect();
+		let x = bcr.left <= 0 ? ((clientWidth / 2 - bcr.left) / bcr.width) : 0.5;
+		let y = bcr.top <= 0 ? ((clientHeight / 2 - bcr.top) / bcr.height) : 0.5;
+		this.zoom = z;
+		bcr = this.image.getBoundingClientRect();
+		this._body.scrollTo(x * bcr.width - clientWidth / 2, y * bcr.height - clientHeight / 2);
+	},
 	toggleBackground: function() {
 		if (!this._body.style.backgroundImage) {
 			this._body.style.backgroundColor = '#e5e5e5';
@@ -152,13 +161,13 @@ BetterImageViewer.prototype = {
 			if (event.target.localName == 'button') {
 				switch (event.target.id) {
 				case 'zoomIn':
-					this.zoom++;
+					this.zoomCentered(this.zoom + 1);
 					return;
 				case 'zoomOut':
-					this.zoom--;
+					this.zoomCentered(this.zoom - 1);
 					return;
 				case 'zoom1':
-					this.zoom = 0;
+					this.zoomCentered(0);
 					return;
 				case 'zoomFit':
 					this.zoomToFit();
@@ -216,12 +225,12 @@ BetterImageViewer.prototype = {
 			switch (event.code) {
 			case 'Minus':
 			case 'NumpadSubtract':
-				this.zoom--;
+				this.zoomCentered(this.zoom - 1);
 				event.preventDefault();
 				break;
 			case 'Equal':
 			case 'NumpadAdd':
-				this.zoom++;
+				this.zoomCentered(this.zoom + 1);
 				event.preventDefault();
 				break;
 			case 'Digit0':
