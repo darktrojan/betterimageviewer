@@ -189,10 +189,12 @@ BetterImageViewer.prototype = {
 			event.preventDefault();
 			break;
 		case 'mousedown':
-			this._lastMousePosition = { x: event.clientX, y: event.clientY };
-			this._win.addEventListener('mousemove', this);
-			this._win.addEventListener('mouseup', this);
-			event.preventDefault();
+			if (!event.shiftKey) {
+				this._lastMousePosition = { x: event.clientX, y: event.clientY };
+				this._win.addEventListener('mousemove', this);
+				this._win.addEventListener('mouseup', this);
+				event.preventDefault();
+			}
 			break;
 		case 'mousemove':
 			let dX = this._lastMousePosition.x - event.clientX;
