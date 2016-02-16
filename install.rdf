@@ -3,7 +3,7 @@
 
 	<Description about="urn:mozilla:install-manifest">
 		<em:id>betterimageviewer@darktrojan.net</em:id>
-		<em:version>7</em:version>
+		<em:version>8</em:version>
 		<em:type>2</em:type>
 		<em:bootstrap>true</em:bootstrap>
 		<em:name>Better Image Viewer</em:name>
