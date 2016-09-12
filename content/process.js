@@ -1,5 +1,11 @@
-/* globals Components, Services, addMessageListener, removeMessageListener */
+/* globals Components, Services, XPCOMUtils, addMessageListener, removeMessageListener */
 Components.utils.import('resource://gre/modules/Services.jsm');
+Components.utils.import('resource://gre/modules/XPCOMUtils.jsm');
+
+/* globals scrollbarStylesheet */
+XPCOMUtils.defineLazyGetter(this, 'scrollbarStylesheet', function() {
+	return Services.io.newURI('chrome://devtools/skin/floating-scrollbars-responsive-design.css', null, null);
+});
 
 let viewers = new Set();
 
@@ -82,6 +88,10 @@ BetterImageViewer.prototype = {
 		this._win.addEventListener('wheel', this);
 		this._win.addEventListener('keypress', this);
 		this._win.addEventListener('resize', this);
+
+		let winUtils = this._win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+				.getInterface(Components.interfaces.nsIDOMWindowUtils);
+		winUtils.loadSheet(scrollbarStylesheet, winUtils.AGENT_SHEET);
 
 		let toolbar = this._doc.createElement('div');
 		toolbar.id = 'toolbar';
