@@ -42,3 +42,9 @@ img.transparent {
 #zoomFit {
 	background-image: url("chrome://betterimageviewer/content/zoomFit.svg");
 }
+#zoomFitWidth {
+	background-image: url("chrome://betterimageviewer/content/zoomFitWidth.svg");
+}
+#zoomFitHeight {
+	background-image: url("chrome://betterimageviewer/content/zoomFitHeight.svg");
+}

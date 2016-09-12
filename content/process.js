@@ -60,12 +60,16 @@ function BetterImageViewer(doc) {
 
 	this.init();
 }
+BetterImageViewer.FIT_NONE = 0;
+BetterImageViewer.FIT_WIDTH = 1;
+BetterImageViewer.FIT_HEIGHT = 2;
+BetterImageViewer.FIT_BOTH = 3;
 BetterImageViewer.prototype = {
 	_doc: null,
 	_win: null,
 	_body: null,
 	_currentZoom: 0,
-	_zoomedToFit: false,
+	_zoomedToFit: BetterImageViewer.FIT_NONE,
 	_lastMousePosition: null,
 	_justScrolled: false,
 	init: function() {
@@ -95,7 +99,7 @@ BetterImageViewer.prototype = {
 
 		let toolbar = this._doc.createElement('div');
 		toolbar.id = 'toolbar';
-		for (let tool of ['zoomIn', 'zoomOut', 'zoom1', 'zoomFit']) {
+		for (let tool of ['zoomIn', 'zoomOut', 'zoom1', 'zoomFit', 'zoomFitWidth', 'zoomFitHeight']) {
 			let button = this._doc.createElement('button');
 			button.id = tool;
 			toolbar.appendChild(button);
@@ -111,7 +115,7 @@ BetterImageViewer.prototype = {
 	},
 	set zoom(z) {
 		this._currentZoom = z;
-		this._zoomedToFit = false;
+		this._zoomedToFit = BetterImageViewer.FIT_NONE;
 		this.image.width = Math.pow(2, z / 4) * this.image.naturalWidth;
 		this.image.height = Math.pow(2, z / 4) * this.image.naturalHeight;
 
@@ -128,11 +132,17 @@ BetterImageViewer.prototype = {
 			this.image.classList.remove('overflowingVertical');
 		}
 	},
-	zoomToFit: function() {
-		let minZoomX = Math.floor((Math.log2(this._win.innerWidth) - Math.log2(this.image.naturalWidth)) * 4);
-		let minZoomY = Math.floor((Math.log2(this._win.innerHeight) - Math.log2(this.image.naturalHeight)) * 4);
+	zoomToFit: function(which = BetterImageViewer.FIT_BOTH) {
+		let minZoomX = 0;
+		if (which == BetterImageViewer.FIT_BOTH || which == BetterImageViewer.FIT_WIDTH) {
+			minZoomX = Math.floor((Math.log2(this._win.innerWidth) - Math.log2(this.image.naturalWidth)) * 4);
+		}
+		let minZoomY = 0;
+		if (which == BetterImageViewer.FIT_BOTH || which == BetterImageViewer.FIT_HEIGHT) {
+			minZoomY = Math.floor((Math.log2(this._win.innerHeight) - Math.log2(this.image.naturalHeight)) * 4);
+		}
 		this.zoom = Math.min(minZoomX, minZoomY, 0);
-		this._zoomedToFit = true;
+		this._zoomedToFit = which;
 	},
 	zoomCentered: function(z) {
 		let { clientWidth, clientHeight } = this._doc.body;
@@ -181,6 +191,12 @@ BetterImageViewer.prototype = {
 					return;
 				case 'zoomFit':
 					this.zoomToFit();
+					return;
+				case 'zoomFitWidth':
+					this.zoomToFit(BetterImageViewer.FIT_WIDTH);
+					return;
+				case 'zoomFitHeight':
+					this.zoomToFit(BetterImageViewer.FIT_HEIGHT);
 					return;
 				}
 			}
@@ -251,7 +267,7 @@ BetterImageViewer.prototype = {
 			break;
 		case 'resize':
 			if (this._zoomedToFit) {
-				this.zoomToFit();
+				this.zoomToFit(this._zoomedToFit);
 			}
 			break;
 		}
