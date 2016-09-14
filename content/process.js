@@ -141,7 +141,7 @@ BetterImageViewer.prototype = {
 		if (which == BetterImageViewer.FIT_BOTH || which == BetterImageViewer.FIT_HEIGHT) {
 			minZoomY = Math.floor((Math.log2(this._win.innerHeight) - Math.log2(this.image.naturalHeight)) * 4);
 		}
-		this.zoom = Math.min(minZoomX, minZoomY, 0);
+		this.zoomCentered(Math.min(minZoomX, minZoomY, 0));
 		this._zoomedToFit = which;
 	},
 	zoomCentered: function(z) {
