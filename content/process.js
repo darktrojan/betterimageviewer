@@ -44,11 +44,9 @@ let listener = {
 	},
 	observe: function(subject) {
 		let doc = subject.document;
-		if (doc.toString() != '[object ImageDocument]') {
-			return;
+		if (doc instanceof Components.interfaces.nsIImageDocument) {
+			viewers.add(new BetterImageViewer(doc));
 		}
-
-		viewers.add(new BetterImageViewer(doc));
 	}
 };
 listener.init();
@@ -83,10 +81,27 @@ BetterImageViewer.prototype = {
 
 		this.image = this._body.firstElementChild;
 
-		if (this.image.complete) {
-			this.zoomToFit();
-		}
-		this.image.addEventListener('load', this);
+		let self = this;
+		let observer = {
+			sizeAvailable: function sizeAvailable() {
+				self._win.setTimeout(function() {
+					self.zoomToFit();
+				}, 0);
+			},
+			frameComplete: function frameComplete() {},
+			decodeComplete: function decodeComplete() {},
+			loadComplete: function loadComplete() {
+				self.image.removeObserver(scriptedObserver);
+			},
+			frameUpdate: function frameUpdate() {},
+			discard: function discard() {},
+			isAnimated: function isAnimated() {}
+		};
+		let scriptedObserver = Components.classes['@mozilla.org/image/tools;1']
+			.getService(Components.interfaces.imgITools)
+			.createScriptedObserver(observer);
+		this.image.addObserver(scriptedObserver);
+
 		this.image.addEventListener('click', this);
 		this._body.addEventListener('mousedown', this);
 		this._win.addEventListener('wheel', this);
@@ -133,6 +148,9 @@ BetterImageViewer.prototype = {
 		}
 	},
 	zoomToFit: function(which = BetterImageViewer.FIT_BOTH) {
+		if (!this.image.naturalWidth || !this.image.naturalHeight) {
+			return;
+		}
 		let minZoomX = 0;
 		if (which == BetterImageViewer.FIT_BOTH || which == BetterImageViewer.FIT_WIDTH) {
 			minZoomX = Math.floor((Math.log2(this._win.innerWidth) - Math.log2(this.image.naturalWidth)) * 4);
@@ -169,9 +187,6 @@ BetterImageViewer.prototype = {
 			break;
 		case 'error':
 			Components.utils.reportError(event);
-			break;
-		case 'load':
-			this.zoomToFit();
 			break;
 		case 'click':
 			if (!!this._justScrolled) {
