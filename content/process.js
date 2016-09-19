@@ -153,11 +153,11 @@ BetterImageViewer.prototype = {
 		}
 		let minZoomX = 0;
 		if (which == BetterImageViewer.FIT_BOTH || which == BetterImageViewer.FIT_WIDTH) {
-			minZoomX = Math.floor((Math.log2(this._win.innerWidth) - Math.log2(this.image.naturalWidth)) * 4);
+			minZoomX = (Math.log2(this._win.innerWidth) - Math.log2(this.image.naturalWidth)) * 4;
 		}
 		let minZoomY = 0;
 		if (which == BetterImageViewer.FIT_BOTH || which == BetterImageViewer.FIT_HEIGHT) {
-			minZoomY = Math.floor((Math.log2(this._win.innerHeight) - Math.log2(this.image.naturalHeight)) * 4);
+			minZoomY = (Math.log2(this._win.innerHeight) - Math.log2(this.image.naturalHeight)) * 4;
 		}
 		this.zoomCentered(Math.min(minZoomX, minZoomY, 0));
 		this._zoomedToFit = which;
@@ -170,6 +170,32 @@ BetterImageViewer.prototype = {
 		this.zoom = z;
 		bcr = this.image.getBoundingClientRect();
 		this._body.scrollTo(x * bcr.width - clientWidth / 2, y * bcr.height - clientHeight / 2);
+	},
+	get currentZoomPlus1() {
+		let fractional = this.zoom % 1;
+		if (fractional == 0) {
+			return this.zoom + 1;
+		}
+
+		// Skip the nearest zoom level if we are close to it.
+		let whole = Math.ceil(this.zoom);
+		if (fractional > -0.15) {
+			whole++;
+		}
+		return whole;
+	},
+	get currentZoomMinus1() {
+		let fractional = this.zoom % 1;
+		if (fractional == 0) {
+			return this.zoom - 1;
+		}
+
+		// Skip the nearest zoom level if we are close to it.
+		let whole = Math.floor(this.zoom);
+		if (fractional < -0.85) {
+			whole--;
+		}
+		return whole;
 	},
 	toggleBackground: function() {
 		if (!this._body.style.backgroundImage) {
@@ -196,10 +222,10 @@ BetterImageViewer.prototype = {
 			if (event.target.localName == 'button') {
 				switch (event.target.id) {
 				case 'zoomIn':
-					this.zoomCentered(this.zoom + 1);
+					this.zoomCentered(this.currentZoomPlus1);
 					return;
 				case 'zoomOut':
-					this.zoomCentered(this.zoom - 1);
+					this.zoomCentered(this.currentZoomMinus1);
 					return;
 				case 'zoom1':
 					this.zoomCentered(0);
@@ -228,9 +254,9 @@ BetterImageViewer.prototype = {
 			if (event.type == 'click') {
 				this.zoom = 0;
 			} else if (event.deltaY < 0) {
-				this.zoom++;
+				this.zoom = this.currentZoomPlus1;
 			} else {
-				this.zoom--;
+				this.zoom = this.currentZoomMinus1;
 			}
 
 			bcr = this.image.getBoundingClientRect();
@@ -266,12 +292,12 @@ BetterImageViewer.prototype = {
 			switch (event.code) {
 			case 'Minus':
 			case 'NumpadSubtract':
-				this.zoomCentered(this.zoom - 1);
+				this.zoomCentered(this.currentZoomMinus1);
 				event.preventDefault();
 				break;
 			case 'Equal':
 			case 'NumpadAdd':
-				this.zoomCentered(this.zoom + 1);
+				this.zoomCentered(this.currentZoomPlus1);
 				event.preventDefault();
 				break;
 			case 'Digit0':
