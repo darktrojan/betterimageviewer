@@ -14,7 +14,7 @@ let listener = {
 		'BetterImageViewer:disable'
 	],
 	_notifications: [
-		'content-document-global-created'
+		'document-element-inserted'
 	],
 	init: function() {
 		for (let m of this._messages) {
@@ -43,9 +43,8 @@ let listener = {
 		}
 	},
 	observe: function(subject) {
-		let doc = subject.document;
-		if (doc instanceof Components.interfaces.nsIImageDocument) {
-			viewers.add(new BetterImageViewer(doc));
+		if (subject instanceof Components.interfaces.nsIImageDocument) {
+			viewers.add(new BetterImageViewer(subject));
 		}
 	}
 };
