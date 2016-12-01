@@ -1,4 +1,4 @@
-/* globals Components, Services, XPCOMUtils, addMessageListener, removeMessageListener */
+/* globals Components, Services, XPCOMUtils, addMessageListener, removeMessageListener, sendAsyncMessage */
 Components.utils.import('resource://gre/modules/Services.jsm');
 Components.utils.import('resource://gre/modules/XPCOMUtils.jsm');
 
@@ -106,6 +106,7 @@ BetterImageViewer.prototype = {
 		this._win.addEventListener('wheel', this);
 		this._win.addEventListener('keypress', this);
 		this._win.addEventListener('resize', this);
+		this._win.addEventListener('BetterImageViewer:ZoomReset', this);
 
 		let winUtils = this._win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
 				.getInterface(Components.interfaces.nsIDOMWindowUtils);
@@ -130,8 +131,9 @@ BetterImageViewer.prototype = {
 	set zoom(z) {
 		this._currentZoom = z;
 		this._zoomedToFit = BetterImageViewer.FIT_NONE;
-		this.image.width = Math.pow(2, z / 4) * this.image.naturalWidth;
-		this.image.height = Math.pow(2, z / 4) * this.image.naturalHeight;
+		let scale = Math.pow(2, z / 4);
+		this.image.width = scale * this.image.naturalWidth;
+		this.image.height = scale * this.image.naturalHeight;
 
 		this.image.classList.remove('shrinkToFit');
 		this.image.classList.remove('overflowing');
@@ -145,6 +147,8 @@ BetterImageViewer.prototype = {
 		} else {
 			this.image.classList.remove('overflowingVertical');
 		}
+
+		sendAsyncMessage('BetterImageViewer:ZoomChanged', {scale});
 	},
 	zoomToFit: function(which = BetterImageViewer.FIT_BOTH) {
 		if (!this.image.naturalWidth || !this.image.naturalHeight) {
@@ -309,6 +313,9 @@ BetterImageViewer.prototype = {
 			if (this._zoomedToFit) {
 				this.zoomToFit(this._zoomedToFit);
 			}
+			break;
+		case 'BetterImageViewer:ZoomReset':
+			this.zoomCentered(0);
 			break;
 		}
 	}
