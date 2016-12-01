@@ -3,11 +3,10 @@ Components.utils.import('resource://gre/modules/Services.jsm');
 
 let listener = {
 	_messages: [
+		'BetterImageViewer:enable',
+		'BetterImageViewer:disable',
 		'BetterImageViewer:ZoomReset'
 	],
-	init: function() {
-		this.enable();
-	},
 	enable: function() {
 		for (let m of this._messages) {
 			addMessageListener(m, this);
@@ -20,6 +19,12 @@ let listener = {
 	},
 	receiveMessage: function(message) {
 		switch (message.name) {
+		case 'BetterImageViewer:enable':
+			this.enable();
+			break;
+		case 'BetterImageViewer:disable':
+			this.disable();
+			break;
 		case 'BetterImageViewer:ZoomReset':
 			try {
 				content.document.QueryInterface(Components.interfaces.nsIImageDocument);
@@ -31,4 +36,4 @@ let listener = {
 		}
 	}
 };
-listener.init();
+listener.enable();

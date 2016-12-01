@@ -44,13 +44,16 @@ var messageListener = {
 	],
 	init: function() {
 		Services.mm.loadFrameScript(this._frameScriptURL, true);
+		Services.mm.broadcastAsyncMessage('BetterImageViewer:enable');
 		for (let m of this._processmessages) {
 			Services.ppmm.addMessageListener(m, this);
 		}
 		Services.ppmm.loadProcessScript(this._processScriptURL, true);
+		Services.ppmm.broadcastAsyncMessage('BetterImageViewer:enable');
 	},
 	destroy: function() {
 		Services.mm.removeDelayedFrameScript(this._frameScriptURL);
+		Services.mm.broadcastAsyncMessage('BetterImageViewer:disable');
 		Services.ppmm.removeDelayedProcessScript(this._processScriptURL);
 		Services.ppmm.broadcastAsyncMessage('BetterImageViewer:disable');
 		for (let m of this._processmessages) {

@@ -11,12 +11,13 @@ let viewers = new Set();
 
 let listener = {
 	_messages: [
+		'BetterImageViewer:enable',
 		'BetterImageViewer:disable'
 	],
 	_notifications: [
 		'document-element-inserted'
 	],
-	init: function() {
+	enable: function() {
 		for (let m of this._messages) {
 			addMessageListener(m, this);
 		}
@@ -24,7 +25,7 @@ let listener = {
 			Services.obs.addObserver(this, n, false);
 		}
 	},
-	destroy: function() {
+	disable: function() {
 		for (let m of this._messages) {
 			removeMessageListener(m, this);
 		}
@@ -37,8 +38,11 @@ let listener = {
 	},
 	receiveMessage: function(message) {
 		switch (message.name) {
+		case 'BetterImageViewer:enable':
+			this.enable();
+			break;
 		case 'BetterImageViewer:disable':
-			this.destroy();
+			this.disable();
 			break;
 		}
 	},
@@ -48,7 +52,7 @@ let listener = {
 		}
 	}
 };
-listener.init();
+listener.enable();
 
 function BetterImageViewer(doc) {
 	this._doc = doc;
