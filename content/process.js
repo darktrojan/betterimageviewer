@@ -308,7 +308,13 @@ BetterImageViewer.prototype = {
 				event.preventDefault();
 				break;
 			case 'Digit0':
+			case 'Numpad0':
 				this.zoomToFit();
+				event.preventDefault();
+				break;
+			case 'Digit1':
+			case 'Numpad1':
+				this.zoomCentered(0);
 				event.preventDefault();
 				break;
 			}
