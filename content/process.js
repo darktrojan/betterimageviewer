@@ -1,4 +1,4 @@
-/* globals Components, Services, XPCOMUtils, addMessageListener, removeMessageListener, sendAsyncMessage */
+/* globals Components, Services, XPCOMUtils, addMessageListener, removeMessageListener */
 Components.utils.import('resource://gre/modules/Services.jsm');
 Components.utils.import('resource://gre/modules/XPCOMUtils.jsm');
 
@@ -110,7 +110,6 @@ BetterImageViewer.prototype = {
 		this._win.addEventListener('wheel', this);
 		this._win.addEventListener('keypress', this);
 		this._win.addEventListener('resize', this);
-		this._win.addEventListener('BetterImageViewer:ZoomReset', this);
 
 		let winUtils = this._win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
 				.getInterface(Components.interfaces.nsIDOMWindowUtils);
@@ -151,8 +150,6 @@ BetterImageViewer.prototype = {
 		} else {
 			this.image.classList.remove('overflowingVertical');
 		}
-
-		sendAsyncMessage('BetterImageViewer:ZoomChanged', {scale});
 	},
 	zoomToFit: function(which = BetterImageViewer.FIT_BOTH) {
 		if (!this.image.naturalWidth || !this.image.naturalHeight) {
@@ -323,9 +320,6 @@ BetterImageViewer.prototype = {
 			if (this._zoomedToFit) {
 				this.zoomToFit(this._zoomedToFit);
 			}
-			break;
-		case 'BetterImageViewer:ZoomReset':
-			this.zoomCentered(0);
 			break;
 		}
 	}
