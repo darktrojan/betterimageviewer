@@ -18,8 +18,8 @@ BetterImageViewer.prototype = {
 	_zoomedToFit: BetterImageViewer.FIT_BOTH,
 	_lastMousePosition: null,
 	_justScrolled: false,
+	_title: null,
 	init: function() {
-		this._win.addEventListener('unload', this);
 		this._doc.addEventListener('error', this);
 
 		this._link = this._doc.createElement('link');
@@ -28,6 +28,7 @@ BetterImageViewer.prototype = {
 		this._doc.head.appendChild(this._link);
 
 		this.image = this._body.firstElementChild;
+		this.image.addEventListener('load', this);
 
 		this._doc.addEventListener('click', this, true);
 		this._body.addEventListener('mousedown', this);
@@ -44,9 +45,8 @@ BetterImageViewer.prototype = {
 		}
 		this._body.appendChild(toolbar);
 		toolbar.addEventListener('click', this);
-	},
-	destroy: function() {
-		this._win.location.reload();
+
+		this._title = document.title = document.title.replace(/ - [^()]+ \(\d+%\)$/, '');
 	},
 	get zoom() {
 		return this._currentZoom;
@@ -70,6 +70,12 @@ BetterImageViewer.prototype = {
 		} else {
 			this.image.classList.remove('overflowingVertical');
 		}
+
+		// if (z == 0) {
+		// 	document.title = this._title;
+		// } else {
+		// 	document.title = this._title + ' [' + Math.round(scale * 100) + '%]';
+		// }
 	},
 	zoomToFit: function(which = BetterImageViewer.FIT_BOTH) {
 		if (!this.image.naturalWidth || !this.image.naturalHeight) {
@@ -132,6 +138,9 @@ BetterImageViewer.prototype = {
 	},
 	handleEvent: function(event) {
 		switch (event.type) {
+		case 'load':
+			document.title = this._title;
+			break;
 		case 'error':
 			console.error(event);
 			break;
