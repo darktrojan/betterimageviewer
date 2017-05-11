@@ -1,59 +1,4 @@
-/* globals Components, Services, XPCOMUtils, addMessageListener, removeMessageListener */
-Components.utils.import('resource://gre/modules/Services.jsm');
-Components.utils.import('resource://gre/modules/XPCOMUtils.jsm');
-
-/* globals scrollbarStylesheet */
-XPCOMUtils.defineLazyGetter(this, 'scrollbarStylesheet', function() {
-	return Services.io.newURI('chrome://devtools/skin/floating-scrollbars-responsive-design.css', null, null);
-});
-
-let viewers = new Set();
-
-let listener = {
-	_messages: [
-		'BetterImageViewer:enable',
-		'BetterImageViewer:disable'
-	],
-	_notifications: [
-		'document-element-inserted'
-	],
-	enable: function() {
-		for (let m of this._messages) {
-			addMessageListener(m, this);
-		}
-		for (let n of this._notifications) {
-			Services.obs.addObserver(this, n, false);
-		}
-	},
-	disable: function() {
-		for (let m of this._messages) {
-			removeMessageListener(m, this);
-		}
-		for (let n of this._notifications) {
-			Services.obs.removeObserver(this, n, false);
-		}
-		for (let v of viewers) {
-			v.destroy();
-		}
-	},
-	receiveMessage: function(message) {
-		switch (message.name) {
-		case 'BetterImageViewer:enable':
-			this.enable();
-			break;
-		case 'BetterImageViewer:disable':
-			this.disable();
-			break;
-		}
-	},
-	observe: function(subject) {
-		if (subject instanceof Components.interfaces.nsIImageDocument) {
-			viewers.add(new BetterImageViewer(subject));
-		}
-	}
-};
-listener.enable();
-
+/* globals browser */
 function BetterImageViewer(doc) {
 	this._doc = doc;
 	this._win = doc.defaultView;
@@ -69,8 +14,8 @@ BetterImageViewer.prototype = {
 	_doc: null,
 	_win: null,
 	_body: null,
-	_currentZoom: 0,
-	_zoomedToFit: BetterImageViewer.FIT_NONE,
+	_currentZoom: null,
+	_zoomedToFit: BetterImageViewer.FIT_BOTH,
 	_lastMousePosition: null,
 	_justScrolled: false,
 	init: function() {
@@ -79,41 +24,16 @@ BetterImageViewer.prototype = {
 
 		this._link = this._doc.createElement('link');
 		this._link.setAttribute('rel', 'stylesheet');
-		this._link.setAttribute('href', 'chrome://betterimageviewer/content/betterimageviewer.css');
+		this._link.setAttribute('href', browser.runtime.getURL('betterimageviewer.css'));
 		this._doc.head.appendChild(this._link);
 
 		this.image = this._body.firstElementChild;
 
-		let self = this;
-		let observer = {
-			sizeAvailable: function sizeAvailable() {
-				self._win.setTimeout(function() {
-					self.zoomToFit();
-				}, 0);
-			},
-			frameComplete: function frameComplete() {},
-			decodeComplete: function decodeComplete() {},
-			loadComplete: function loadComplete() {
-				self.image.removeObserver(scriptedObserver);
-			},
-			frameUpdate: function frameUpdate() {},
-			discard: function discard() {},
-			isAnimated: function isAnimated() {}
-		};
-		let scriptedObserver = Components.classes['@mozilla.org/image/tools;1']
-			.getService(Components.interfaces.imgITools)
-			.createScriptedObserver(observer);
-		this.image.addObserver(scriptedObserver);
-
-		this.image.addEventListener('click', this);
+		this._doc.addEventListener('click', this, true);
 		this._body.addEventListener('mousedown', this);
 		this._win.addEventListener('wheel', this);
 		this._win.addEventListener('keypress', this);
 		this._win.addEventListener('resize', this);
-
-		let winUtils = this._win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-				.getInterface(Components.interfaces.nsIDOMWindowUtils);
-		winUtils.loadSheet(scrollbarStylesheet, winUtils.AGENT_SHEET);
 
 		let toolbar = this._doc.createElement('div');
 		toolbar.id = 'toolbar';
@@ -177,7 +97,7 @@ BetterImageViewer.prototype = {
 	},
 	get currentZoomPlus1() {
 		let fractional = this.zoom % 1;
-		if (fractional == 0) {
+		if (fractional === 0) {
 			return this.zoom + 1;
 		}
 
@@ -190,7 +110,7 @@ BetterImageViewer.prototype = {
 	},
 	get currentZoomMinus1() {
 		let fractional = this.zoom % 1;
-		if (fractional == 0) {
+		if (fractional === 0) {
 			return this.zoom - 1;
 		}
 
@@ -212,13 +132,12 @@ BetterImageViewer.prototype = {
 	},
 	handleEvent: function(event) {
 		switch (event.type) {
-		case 'unload':
-			viewers.delete(this);
-			break;
 		case 'error':
-			Components.utils.reportError(event);
+			console.error(event);
 			break;
 		case 'click':
+			event.preventDefault();
+			event.stopPropagation();
 			if (!!this._justScrolled) {
 				this._justScrolled = false;
 				return;
@@ -251,6 +170,16 @@ BetterImageViewer.prototype = {
 			}
 			/* falls through */
 		case 'wheel':
+			if (this._currentZoom === null) {
+				// At load, this is not set, but we're zoomed to fit.
+				if (!this.image.naturalWidth || !this.image.naturalHeight) {
+					return;
+				}
+				let minZoomX = (Math.log2(this._win.innerWidth) - Math.log2(this.image.naturalWidth)) * 4;
+				let minZoomY = (Math.log2(this._win.innerHeight) - Math.log2(this.image.naturalHeight)) * 4;
+				this._currentZoom = Math.min(minZoomX, minZoomY, 0);
+			}
+
 			let bcr = this.image.getBoundingClientRect();
 			let x = (event.clientX - bcr.left) / bcr.width;
 			let y = (event.clientY - bcr.top) / bcr.height;
@@ -317,6 +246,8 @@ BetterImageViewer.prototype = {
 			}
 			break;
 		case 'resize':
+			event.preventDefault();
+			event.stopPropagation();
 			if (this._zoomedToFit) {
 				this.zoomToFit(this._zoomedToFit);
 			}
@@ -324,3 +255,7 @@ BetterImageViewer.prototype = {
 		}
 	}
 };
+
+if (document.toString() == '[object ImageDocument]') {
+	new BetterImageViewer(document);
+}

@@ -1,5 +1,5 @@
 {
-	"browser": false,
+	"browser": true,
 	"esnext": true,
 	"quotmark": true,
 	"undef": true,

@@ -1,0 +1,22 @@
+{
+	"name": "Better Image Viewer",
+	"description": "Enhances Firefox's image viewer with scroll-to-zoom and drag-to-pan functionality.",
+	"version": "14",
+	"applications": {
+		"gecko": {
+			"id": "betterimageviewer@darktrojan.net"
+		}
+	},
+	"content_scripts": [
+		{
+			"matches": [
+				"<all_urls>"
+			],
+			"js": [
+				"process.js"
+			]
+		}
+	],
+	"web_accessible_resources": ["*.svg", "betterimageviewer.css"],
+	"manifest_version": 2
+}

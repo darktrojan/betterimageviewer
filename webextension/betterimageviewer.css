@@ -31,20 +31,20 @@ img.transparent {
 	cursor: pointer;
 }
 #zoomIn {
-	background-image: url("chrome://betterimageviewer/content/zoomIn.svg");
+	background-image: url("zoomIn.svg");
 }
 #zoomOut {
-	background-image: url("chrome://betterimageviewer/content/zoomOut.svg");
+	background-image: url("zoomOut.svg");
 }
 #zoom1 {
-	background-image: url("chrome://betterimageviewer/content/zoom1.svg");
+	background-image: url("zoom1.svg");
 }
 #zoomFit {
-	background-image: url("chrome://betterimageviewer/content/zoomFit.svg");
+	background-image: url("zoomFit.svg");
 }
 #zoomFitWidth {
-	background-image: url("chrome://betterimageviewer/content/zoomFitWidth.svg");
+	background-image: url("zoomFitWidth.svg");
 }
 #zoomFitHeight {
-	background-image: url("chrome://betterimageviewer/content/zoomFitHeight.svg");
+	background-image: url("zoomFitHeight.svg");
 }
