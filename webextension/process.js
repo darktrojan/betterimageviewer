@@ -31,6 +31,7 @@ BetterImageViewer.prototype = {
 		this.image.addEventListener('load', this);
 
 		this._doc.addEventListener('click', this, true);
+		this._doc.addEventListener('click', this);
 		this._body.addEventListener('mousedown', this);
 		this._win.addEventListener('wheel', this);
 		this._win.addEventListener('keypress', this);
@@ -44,9 +45,6 @@ BetterImageViewer.prototype = {
 			toolbar.appendChild(button);
 		}
 		this._body.appendChild(toolbar);
-		toolbar.addEventListener('click', this);
-
-		this._title = document.title = document.title.replace(/ - [^()]+ \(\d+%\)$/, '');
 	},
 	get zoom() {
 		return this._currentZoom;
@@ -76,6 +74,8 @@ BetterImageViewer.prototype = {
 		// } else {
 		// 	document.title = this._title + ' [' + Math.round(scale * 100) + '%]';
 		// }
+
+		this.setTitle();
 	},
 	zoomToFit: function(which = BetterImageViewer.FIT_BOTH) {
 		if (!this.image.naturalWidth || !this.image.naturalHeight) {
@@ -100,6 +100,7 @@ BetterImageViewer.prototype = {
 		this.zoom = z;
 		bcr = this.image.getBoundingClientRect();
 		this._body.scrollTo(x * bcr.width - clientWidth / 2, y * bcr.height - clientHeight / 2);
+		this.captureScrollPosition();
 	},
 	get currentZoomPlus1() {
 		let fractional = this.zoom % 1;
@@ -139,16 +140,21 @@ BetterImageViewer.prototype = {
 	handleEvent: function(event) {
 		switch (event.type) {
 		case 'load':
-			document.title = this._title;
+			this.setTitle();
 			break;
 		case 'error':
 			console.error(event);
 			break;
 		case 'click':
-			event.preventDefault();
-			event.stopPropagation();
 			if (!!this._justScrolled) {
 				this._justScrolled = false;
+				return;
+			}
+			if (event.eventPhase == Event.CAPTURING_PHASE) {
+				let bcr = this.image.getBoundingClientRect();
+				let x = (event.clientX - bcr.left) / bcr.width;
+				let y = (event.clientY - bcr.top) / bcr.height;
+				this._clickData = { x, y };
 				return;
 			}
 			if (event.target.localName == 'button') {
@@ -195,6 +201,9 @@ BetterImageViewer.prototype = {
 
 			if (event.type == 'click') {
 				this.zoom = 0;
+				x = this._clickData.x;
+				y = this._clickData.y;
+				delete this._clickData;
 			} else if (event.deltaY < 0) {
 				this.zoom = this.currentZoomPlus1;
 			} else {
@@ -203,6 +212,7 @@ BetterImageViewer.prototype = {
 
 			bcr = this.image.getBoundingClientRect();
 			this._body.scrollTo(bcr.width * x - event.clientX, bcr.height * y - event.clientY);
+			this.captureScrollPosition();
 
 			event.preventDefault();
 			break;
@@ -221,6 +231,7 @@ BetterImageViewer.prototype = {
 				return;
 			}
 			this._body.scrollBy(dX, dY);
+			this.captureScrollPosition();
 			this._lastMousePosition = { x: event.clientX, y: event.clientY };
 			this._justScrolled = true;
 			event.preventDefault();
@@ -259,9 +270,19 @@ BetterImageViewer.prototype = {
 			event.stopPropagation();
 			if (this._zoomedToFit) {
 				this.zoomToFit(this._zoomedToFit);
+			} else {
+				this.zoom = 0;
+				this._body.scrollTo(this._lastScrollLeft, this._lastScrollTop);
 			}
 			break;
 		}
+	},
+	captureScrollPosition: function() {
+		this._lastScrollLeft = this._body.scrollLeft;
+		this._lastScrollTop = this._body.scrollTop;
+	},
+	setTitle: function() {
+		this._title = document.title = document.title.replace(/ - [^()]+ \(\d+%\)$/, '');
 	}
 };
 
