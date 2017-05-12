@@ -86,14 +86,14 @@ img.transparent {
 #scrollbar-x > div,
 #scrollbar-y > div {
 	position: absolute;
-	opacity: 0.5;
+	opacity: 0.25;
 	border-style: solid;
 	border-color: transparent;
 	box-sizing: border-box;
 }
 #scrollbar-x:hover > div,
 #scrollbar-y:hover > div {
-	opacity: 1;
+	opacity: 0.5;
 }
 body[data-overflow="x"] #scrollbar-x,
 body[data-overflow="both"] #scrollbar-x,
