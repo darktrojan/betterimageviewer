@@ -40,11 +40,13 @@ BetterImageViewer.prototype = {
 
 		let toolbar = this._doc.createElement('div');
 		toolbar.id = 'toolbar';
-		for (let tool of ['zoomIn', 'zoomOut', 'zoom1', 'zoomFit', 'zoomFitWidth', 'zoomFitHeight']) {
+		toolbar.appendChild(this._doc.createElement('div'));
+		for (let tool of ['zoomIn', 'zoomOut', 'zoom1', 'zoomFit', 'zoomFitWidth', 'zoomFitHeight', 'donate']) {
 			let button = this._doc.createElement('button');
 			button.id = tool;
 			toolbar.appendChild(button);
 		}
+		toolbar.insertBefore(this._doc.createElement('div'), toolbar.lastElementChild);
 		this._body.appendChild(toolbar);
 
 		let scrollbarX = document.createElement('div');
@@ -194,6 +196,9 @@ BetterImageViewer.prototype = {
 					return;
 				case 'zoomFitHeight':
 					this.zoomToFit(BetterImageViewer.FIT_HEIGHT);
+					return;
+				case 'donate':
+					this._win.open('https://darktrojan.github.io/donate.html?betterimageviewer');
 					return;
 				}
 			} else if (event.target == this._scrollX.parentNode) {
