@@ -153,6 +153,14 @@ BetterImageViewer.prototype = {
 		}
 	},
 	handleEvent: function(event) {
+		if (this._currentZoom === null &&
+				!!this.image.naturalWidth && !!this.image.naturalHeight) {
+			// At load, this is not set, but we're zoomed to fit.
+			let minZoomX = (Math.log2(this._win.innerWidth) - Math.log2(this.image.naturalWidth)) * 4;
+			let minZoomY = (Math.log2(this._win.innerHeight) - Math.log2(this.image.naturalHeight)) * 4;
+			this._currentZoom = Math.min(minZoomX, minZoomY, 0);
+		}
+
 		switch (event.type) {
 		case 'load':
 			this.setTitle();
@@ -225,16 +233,6 @@ BetterImageViewer.prototype = {
 			}
 			/* falls through */
 		case 'wheel':
-			if (this._currentZoom === null) {
-				// At load, this is not set, but we're zoomed to fit.
-				if (!this.image.naturalWidth || !this.image.naturalHeight) {
-					return;
-				}
-				let minZoomX = (Math.log2(this._win.innerWidth) - Math.log2(this.image.naturalWidth)) * 4;
-				let minZoomY = (Math.log2(this._win.innerHeight) - Math.log2(this.image.naturalHeight)) * 4;
-				this._currentZoom = Math.min(minZoomX, minZoomY, 0);
-			}
-
 			let bcr = this.image.getBoundingClientRect();
 			let x = (event.clientX - bcr.left) / bcr.width;
 			let y = (event.clientY - bcr.top) / bcr.height;
