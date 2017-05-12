@@ -17,6 +17,6 @@
 			]
 		}
 	],
-	"web_accessible_resources": ["*.svg", "betterimageviewer.css"],
+	"web_accessible_resources": ["zoom*.svg", "scroll*.png", "betterimageviewer.css"],
 	"manifest_version": 2
 }

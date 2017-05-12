@@ -51,3 +51,53 @@ img.transparent {
 #zoomFitHeight {
 	background-image: url("zoomFitHeight.svg");
 }
+#scrollbar-x {
+	display: none;
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 10px;
+}
+#scrollbar-x > div {
+	height: 100%;
+	border-width: 5px 3px;
+	border-image: url("scrollX.png") 50% 30% 50% 30% fill;
+}
+#scrollbar-y {
+	display: none;
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: 10px;
+}
+#scrollbar-y > div {
+	width: 100%;
+	border-width: 3px 5px;
+	border-image: url("scrollY.png") 30% 50% 30% 50% fill;
+}
+#scrollbar-x > div,
+#scrollbar-y > div {
+	position: absolute;
+	opacity: 0.5;
+	border-style: solid;
+	border-color: transparent;
+	box-sizing: border-box;
+}
+#scrollbar-x:hover > div,
+#scrollbar-y:hover > div {
+	opacity: 1;
+}
+body[data-overflow="x"] #scrollbar-x,
+body[data-overflow="both"] #scrollbar-x,
+body[data-overflow="y"] #scrollbar-y,
+body[data-overflow="both"] #scrollbar-y {
+	display: block;
+}
+body[data-overflow="both"] #scrollbar-x {
+	right: 10px;
+}
+body[data-overflow="both"] #scrollbar-y {
+	bottom: 10px;
+}

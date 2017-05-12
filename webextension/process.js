@@ -36,6 +36,7 @@ BetterImageViewer.prototype = {
 		this._win.addEventListener('wheel', this);
 		this._win.addEventListener('keypress', this);
 		this._win.addEventListener('resize', this);
+		this._win.addEventListener('scroll', this);
 
 		let toolbar = this._doc.createElement('div');
 		toolbar.id = 'toolbar';
@@ -45,6 +46,19 @@ BetterImageViewer.prototype = {
 			toolbar.appendChild(button);
 		}
 		this._body.appendChild(toolbar);
+
+		let scrollbarX = document.createElement('div');
+		scrollbarX.id = 'scrollbar-x';
+		scrollbarX.appendChild(document.createElement('div'));
+		this._body.appendChild(scrollbarX);
+
+		let scrollbarY = document.createElement('div');
+		scrollbarY.id = 'scrollbar-y';
+		scrollbarY.appendChild(document.createElement('div'));
+		this._body.appendChild(scrollbarY);
+
+		this._scrollX = scrollbarX.firstElementChild;
+		this._scrollY = scrollbarY.firstElementChild;
 	},
 	get zoom() {
 		return this._currentZoom;
@@ -100,7 +114,6 @@ BetterImageViewer.prototype = {
 		this.zoom = z;
 		bcr = this.image.getBoundingClientRect();
 		this._body.scrollTo(x * bcr.width - clientWidth / 2, y * bcr.height - clientHeight / 2);
-		this.captureScrollPosition();
 	},
 	get currentZoomPlus1() {
 		let fractional = this.zoom % 1;
@@ -146,15 +159,20 @@ BetterImageViewer.prototype = {
 			console.error(event);
 			break;
 		case 'click':
-			if (!!this._justScrolled) {
-				this._justScrolled = false;
-				return;
-			}
 			if (event.eventPhase == Event.CAPTURING_PHASE) {
 				let bcr = this.image.getBoundingClientRect();
 				let x = (event.clientX - bcr.left) / bcr.width;
 				let y = (event.clientY - bcr.top) / bcr.height;
 				this._clickData = { x, y };
+				return;
+			}
+
+			// Undo click listener.
+			this.zoom = this._currentZoom;
+			this._body.scrollTo(this._lastScrollLeft, this._lastScrollTop);
+
+			if (!!this._justScrolled) {
+				this._justScrolled = false;
 				return;
 			}
 			if (event.target.localName == 'button') {
@@ -178,7 +196,24 @@ BetterImageViewer.prototype = {
 					this.zoomToFit(BetterImageViewer.FIT_HEIGHT);
 					return;
 				}
+			} else if (event.target == this._scrollX.parentNode) {
+				if (event.clientX < this._scrollX.offsetLeft) {
+					this._body.scrollBy(-this._win.innerWidth, 0);
+				} else {
+					this._body.scrollBy(this._win.innerWidth, 0);
+				}
+				return;
+			} else if (event.target == this._scrollY.parentNode) {
+				if (event.clientY < this._scrollY.offsetTop) {
+					this._body.scrollBy(0, -this._win.innerHeight);
+				} else {
+					this._body.scrollBy(0, this._win.innerHeight);
+				}
+				return;
+			} else if (event.target == this._scrollX || event.target == this._scrollY) {
+				return;
 			}
+
 			if (this.zoom === 0) {
 				this.zoomToFit();
 				return;
@@ -212,13 +247,13 @@ BetterImageViewer.prototype = {
 
 			bcr = this.image.getBoundingClientRect();
 			this._body.scrollTo(bcr.width * x - event.clientX, bcr.height * y - event.clientY);
-			this.captureScrollPosition();
 
 			event.preventDefault();
 			break;
 		case 'mousedown':
 			if (!event.shiftKey) {
 				this._lastMousePosition = { x: event.clientX, y: event.clientY };
+				this._scrolling = event.target;
 				this._win.addEventListener('mousemove', this);
 				this._win.addEventListener('mouseup', this);
 				event.preventDefault();
@@ -227,17 +262,23 @@ BetterImageViewer.prototype = {
 		case 'mousemove':
 			let dX = this._lastMousePosition.x - event.clientX;
 			let dY = this._lastMousePosition.y - event.clientY;
-			if ((dX * dX + dY * dY) < 25) {
+			if (Math.hypot(dX, dY) < 5) {
 				return;
 			}
-			this._body.scrollBy(dX, dY);
-			this.captureScrollPosition();
+			if (this._scrolling == this._scrollX) {
+				this._body.scrollBy(-dX * this.image.width / this._win.innerWidth, 0);
+			} else if (this._scrolling == this._scrollY) {
+				this._body.scrollBy(0, -dY * this.image.height / this._win.innerHeight);
+			} else {
+				this._body.scrollBy(dX, dY);
+			}
 			this._lastMousePosition = { x: event.clientX, y: event.clientY };
 			this._justScrolled = true;
 			event.preventDefault();
 			break;
 		case 'mouseup':
 			this._lastMousePosition = null;
+			this._scrolling = null;
 			this._win.removeEventListener('mousemove', this);
 			this._win.removeEventListener('mouseup', this);
 			break;
@@ -275,11 +316,27 @@ BetterImageViewer.prototype = {
 				this._body.scrollTo(this._lastScrollLeft, this._lastScrollTop);
 			}
 			break;
+		case 'scroll':
+			this._lastScrollLeft = this._body.scrollLeft;
+			this._lastScrollTop = this._body.scrollTop;
+
+			let { width, height } = this.image;
+			let { innerWidth, innerHeight } = this._win;
+
+			if (width > innerWidth) {
+				this._body.dataset.overflow = height > innerHeight ? 'both' : 'x';
+			} else if (height > innerHeight) {
+				this._body.dataset.overflow = 'y';
+			} else {
+				delete this._body.dataset.overflow;
+			}
+
+			this._scrollX.style.width = (innerWidth / width * 100) + '%';
+			this._scrollX.style.left = (this._lastScrollLeft / width * 100) + '%';
+			this._scrollY.style.height = (innerHeight / height * 100) + '%';
+			this._scrollY.style.top = (this._lastScrollTop / height * 100) + '%';
+			break;
 		}
-	},
-	captureScrollPosition: function() {
-		this._lastScrollLeft = this._body.scrollLeft;
-		this._lastScrollTop = this._body.scrollTop;
 	},
 	setTitle: function() {
 		this._title = document.title = document.title.replace(/ - [^()]+ \(\d+%\)$/, '');
