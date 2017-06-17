@@ -10,7 +10,7 @@
 	},
 	"content_scripts": [{
 		"matches": ["<all_urls>"],
-		"js": ["process.js"]
+		"js": ["betterimageviewer.js"]
 	}],
 	"web_accessible_resources": ["donate.svg", "zoom*.svg", "scroll*.png", "betterimageviewer.css"],
 	"manifest_version": 2
