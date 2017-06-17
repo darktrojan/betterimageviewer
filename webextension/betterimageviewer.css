@@ -1,6 +1,9 @@
 body {
 	overflow: hidden;
 }
+body[data-idle] * {
+	cursor: none !important;
+}
 img.transparent {
 	background-color: transparent;
 	background-image: none;
@@ -22,7 +25,7 @@ img.transparent {
 	opacity: 0;
 	transition: opacity 250ms;
 }
-#toolbar:hover {
+body:not([data-idle]) #toolbar:hover {
 	opacity: 1;
 }
 #toolbar > button {
@@ -94,6 +97,11 @@ img.transparent {
 #scrollbar-x:hover > div,
 #scrollbar-y:hover > div {
 	opacity: 0.5;
+}
+body[data-idle] #scrollbar-x > div,
+body[data-idle] #scrollbar-y > div {
+	opacity: 0;
+	transition: opacity 250ms;
 }
 body[data-overflow="x"] #scrollbar-x,
 body[data-overflow="both"] #scrollbar-x,

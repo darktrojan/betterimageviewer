@@ -33,6 +33,7 @@ BetterImageViewer.prototype = {
 		this._doc.addEventListener('click', this, true);
 		this._doc.addEventListener('click', this);
 		this._body.addEventListener('mousedown', this);
+		this._win.addEventListener('mousemove', this);
 		this._win.addEventListener('wheel', this);
 		this._win.addEventListener('keypress', this);
 		this._win.addEventListener('resize', this);
@@ -66,6 +67,8 @@ BetterImageViewer.prototype = {
 		return this._currentZoom;
 	},
 	set zoom(z) {
+		this.setIdle();
+
 		this._currentZoom = z;
 		this._zoomedToFit = BetterImageViewer.FIT_NONE;
 		let scale = Math.pow(2, z / 4);
@@ -257,12 +260,17 @@ BetterImageViewer.prototype = {
 			if (!event.shiftKey) {
 				this._lastMousePosition = { x: event.clientX, y: event.clientY };
 				this._scrolling = event.target;
-				this._win.addEventListener('mousemove', this);
 				this._win.addEventListener('mouseup', this);
 				event.preventDefault();
 			}
 			break;
 		case 'mousemove':
+			this.setIdle();
+
+			if (!this._scrolling) {
+				return;
+			}
+
 			let dX = this._lastMousePosition.x - event.clientX;
 			let dY = this._lastMousePosition.y - event.clientY;
 			if (Math.hypot(dX, dY) < 5) {
@@ -282,7 +290,6 @@ BetterImageViewer.prototype = {
 		case 'mouseup':
 			this._lastMousePosition = null;
 			this._scrolling = null;
-			this._win.removeEventListener('mousemove', this);
 			this._win.removeEventListener('mouseup', this);
 			break;
 		case 'keypress':
@@ -343,6 +350,16 @@ BetterImageViewer.prototype = {
 	},
 	setTitle: function() {
 		this._title = document.title = document.title.replace(/ - [^()]+ \(\d+%\)$/, '');
+	},
+	setIdle: function() {
+		if (this._idleTimeout) {
+			this._win.clearTimeout(this._idleTimeout);
+		}
+
+		delete this._body.dataset.idle;
+		this._idleTimeout = this._win.setTimeout(() => {
+			this._body.dataset.idle = true;
+		}, 1500);
 	}
 };
 
