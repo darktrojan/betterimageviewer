@@ -81,12 +81,6 @@ BetterImageViewer.prototype = {
 			this.image.classList.remove('overflowingVertical');
 		}
 
-		// if (z == 0) {
-		// 	document.title = this._title;
-		// } else {
-		// 	document.title = this._title + ' [' + Math.round(scale * 100) + '%]';
-		// }
-
 		this.setTitle();
 	},
 	zoomToFit: function(which = BetterImageViewer.FIT_BOTH) {
