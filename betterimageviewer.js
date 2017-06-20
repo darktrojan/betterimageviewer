@@ -15,10 +15,10 @@ BetterImageViewer.prototype = {
 	init: function() {
 		document.addEventListener('error', this);
 
-		this._link = document.createElement('link');
-		this._link.setAttribute('rel', 'stylesheet');
-		this._link.setAttribute('href', browser.runtime.getURL('betterimageviewer.css'));
-		document.head.appendChild(this._link);
+		let link = document.createElement('link');
+		link.setAttribute('rel', 'stylesheet');
+		link.setAttribute('href', browser.runtime.getURL('betterimageviewer.css'));
+		document.head.appendChild(link);
 
 		this.image = document.body.firstElementChild;
 		this.image.addEventListener('load', this);
