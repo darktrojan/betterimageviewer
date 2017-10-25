@@ -58,6 +58,7 @@ if (document.toString() == '[object ImageDocument]') {
 			return this._currentZoom;
 		},
 		set zoom(z) {
+			delete document.body.dataset.scrolling;
 			this.setIdle();
 
 			this._currentZoom = z;
@@ -299,6 +300,30 @@ if (document.toString() == '[object ImageDocument]') {
 					this.zoomCentered(0);
 					event.preventDefault();
 					break;
+				case 'ArrowUp':
+					document.body.dataset.scrolling = true;
+					document.body.scrollBy(0, -100);
+					break;
+				case 'ArrowDown':
+					document.body.dataset.scrolling = true;
+					document.body.scrollBy(0, 100);
+					break;
+				case 'ArrowLeft':
+					document.body.dataset.scrolling = true;
+					document.body.scrollBy(-100, 0);
+					break;
+				case 'ArrowRight':
+					document.body.dataset.scrolling = true;
+					document.body.scrollBy(100, 0);
+					break;
+				case 'PageUp':
+					document.body.dataset.scrolling = true;
+					document.body.scrollBy(0, 0 - window.innerHeight);
+					break;
+				case 'PageDown':
+					document.body.dataset.scrolling = true;
+					document.body.scrollBy(0, window.innerHeight);
+					break;
 				}
 				break;
 			case 'resize':
@@ -312,6 +337,7 @@ if (document.toString() == '[object ImageDocument]') {
 				}
 				break;
 			case 'scroll':
+				delete document.body.dataset.scrolling;
 				this._lastScrollLeft = document.body.scrollLeft;
 				this._lastScrollTop = document.body.scrollTop;
 

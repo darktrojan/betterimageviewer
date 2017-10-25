@@ -1,6 +1,9 @@
 body {
 	overflow: hidden;
 }
+body[data-scrolling] {
+	scroll-behavior: smooth;
+}
 body[data-idle] * {
 	cursor: none !important;
 }
