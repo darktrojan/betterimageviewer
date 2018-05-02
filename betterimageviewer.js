@@ -1,4 +1,4 @@
-/* globals browser */
+/* globals chrome */
 if (document.toString() == '[object ImageDocument]') {
 	const FIT_NONE = 0;
 	const FIT_WIDTH = 1;
@@ -15,7 +15,7 @@ if (document.toString() == '[object ImageDocument]') {
 
 			let link = document.createElement('link');
 			link.setAttribute('rel', 'stylesheet');
-			link.setAttribute('href', browser.runtime.getURL('betterimageviewer.css'));
+			link.setAttribute('href', chrome.runtime.getURL('betterimageviewer.css'));
 			document.head.appendChild(link);
 
 			this.image = document.body.firstElementChild;
@@ -346,8 +346,8 @@ if (document.toString() == '[object ImageDocument]') {
 				if (this._zoomedToFit) {
 					this.zoomToFit(this._zoomedToFit);
 				} else {
-					this.zoom = 0;
-					document.body.scrollTo(this._lastScrollLeft, this._lastScrollTop);
+					this.zoomCentered(this.zoom);
+					this.setScrollbars();
 				}
 				break;
 			case 'scroll':
@@ -355,26 +355,29 @@ if (document.toString() == '[object ImageDocument]') {
 				this._lastScrollLeft = document.body.scrollLeft;
 				this._lastScrollTop = document.body.scrollTop;
 
-				let { width, height } = this.image;
-				let { innerWidth, innerHeight } = window;
-
-				if (width > innerWidth) {
-					document.body.dataset.overflow = height > innerHeight ? 'both' : 'x';
-				} else if (height > innerHeight) {
-					document.body.dataset.overflow = 'y';
-				} else {
-					delete document.body.dataset.overflow;
-				}
-
-				this._scrollX.style.width = (innerWidth / width * 100) + '%';
-				this._scrollX.style.left = (this._lastScrollLeft / width * 100) + '%';
-				this._scrollY.style.height = (innerHeight / height * 100) + '%';
-				this._scrollY.style.top = (this._lastScrollTop / height * 100) + '%';
+				this.setScrollbars();
 				break;
 			}
 		},
 		setTitle: function() {
 			this._title = document.title = document.title.replace(/ - [^()]+ \(\d+%\)$/, '');
+		},
+		setScrollbars: function() {
+			let { width, height } = this.image;
+			let { innerWidth, innerHeight } = window;
+
+			if (width > innerWidth) {
+				document.body.dataset.overflow = height > innerHeight ? 'both' : 'x';
+			} else if (height > innerHeight) {
+				document.body.dataset.overflow = 'y';
+			} else {
+				delete document.body.dataset.overflow;
+			}
+
+			this._scrollX.style.width = (innerWidth / width * 100) + '%';
+			this._scrollX.style.left = (this._lastScrollLeft / width * 100) + '%';
+			this._scrollY.style.height = (innerHeight / height * 100) + '%';
+			this._scrollY.style.top = (this._lastScrollTop / height * 100) + '%';
 		},
 		setIdle: function() {
 			if (this._idleTimeout) {
