@@ -19,7 +19,12 @@ if (document.toString() == '[object ImageDocument]') {
 			document.head.appendChild(link);
 
 			this.image = document.body.firstElementChild;
-			this.image.addEventListener('load', this);
+			if (this.image.complete) {
+				this.setTitle();
+				this.zoomToFit();
+			} else {
+				this.image.addEventListener('load', this);
+			}
 
 			document.addEventListener('click', this, true);
 			document.addEventListener('click', this);
@@ -153,11 +158,16 @@ if (document.toString() == '[object ImageDocument]') {
 			switch (event.type) {
 			case 'load':
 				this.setTitle();
+				this.zoomToFit();
 				break;
 			case 'error':
 				console.error(event);
 				break;
 			case 'click':
+				if (event.button !== 0) {
+					return;
+				}
+
 				if (event.eventPhase == Event.CAPTURING_PHASE) {
 					let bcr = this.image.getBoundingClientRect();
 					let x = (event.clientX - bcr.left) / bcr.width;
@@ -243,7 +253,7 @@ if (document.toString() == '[object ImageDocument]') {
 				event.preventDefault();
 				break;
 			case 'mousedown':
-				if (!event.shiftKey) {
+				if (event.button === 0 && !event.shiftKey) {
 					this._lastMousePosition = { x: event.clientX, y: event.clientY };
 					this._scrolling = event.target;
 					window.addEventListener('mouseup', this);
@@ -251,6 +261,10 @@ if (document.toString() == '[object ImageDocument]') {
 				}
 				break;
 			case 'mousemove':
+				if (event.button !== 0) {
+					return;
+				}
+
 				this.setIdle();
 
 				if (!this._scrolling) {
