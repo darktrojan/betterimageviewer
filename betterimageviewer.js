@@ -32,6 +32,7 @@ if (document.toString() == '[object ImageDocument]') {
 			window.addEventListener('mousemove', this);
 			window.addEventListener('wheel', this);
 			window.addEventListener('keypress', this);
+			window.addEventListener('keydown', this);
 			window.addEventListener('resize', this);
 			window.addEventListener('scroll', this);
 
@@ -314,6 +315,10 @@ if (document.toString() == '[object ImageDocument]') {
 					this.zoomCentered(0);
 					event.preventDefault();
 					break;
+				}
+				break;
+			case 'keydown':
+				switch (event.code) {
 				case 'ArrowUp':
 					document.body.dataset.scrolling = true;
 					document.body.scrollBy(0, -100);
