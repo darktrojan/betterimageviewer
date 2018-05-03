@@ -1,13 +1,8 @@
 {
 	"name": "Better Image Viewer",
-	"description": "Enhances Firefox's image viewer with scroll-to-zoom and drag-to-pan functionality.",
+	"description": "Enhances Chrome's image viewer with scroll-to-zoom and drag-to-pan functionality.",
 	"author": "Geoff Lankow",
-	"version": "18",
-	"applications": {
-		"gecko": {
-			"id": "betterimageviewer@darktrojan.net"
-		}
-	},
+	"version": "19",
 	"content_scripts": [{
 		"matches": ["<all_urls>"],
 		"js": ["betterimageviewer.js"]

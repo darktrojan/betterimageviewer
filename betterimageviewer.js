@@ -1,5 +1,5 @@
 /* globals chrome */
-if (document.toString() == '[object ImageDocument]') {
+if (document.body.childElementCount == 1 && document.body.firstElementChild.localName == 'img') {
 	const FIT_NONE = 0;
 	const FIT_WIDTH = 1;
 	const FIT_HEIGHT = 2;
