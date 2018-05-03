@@ -8,6 +8,7 @@ if (document.toString() == '[object ImageDocument]') {
 		_currentZoom: null,
 		_zoomedToFit: FIT_BOTH,
 		_lastMousePosition: null,
+		_lastWheel: 0,
 		_justScrolled: false,
 		_title: null,
 		init: function() {
@@ -242,10 +243,16 @@ if (document.toString() == '[object ImageDocument]') {
 					x = this._clickData.x;
 					y = this._clickData.y;
 					delete this._clickData;
-				} else if (event.deltaY < 0) {
-					this.zoom = this.currentZoomPlus1;
 				} else {
-					this.zoom = this.currentZoomMinus1;
+					if (event.timeStamp - this._lastWheel < 50) {
+						return;
+					}
+					this._lastWheel = event.timeStamp;
+					if (event.deltaY < 0) {
+						this.zoom = this.currentZoomPlus1;
+					} else {
+						this.zoom = this.currentZoomMinus1;
+					}
 				}
 
 				bcr = this.image.getBoundingClientRect();
