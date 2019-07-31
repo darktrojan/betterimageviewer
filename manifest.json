@@ -2,7 +2,7 @@
 	"name": "Better Image Viewer",
 	"description": "Enhances Firefox's image viewer with scroll-to-zoom and drag-to-pan functionality.",
 	"author": "Geoff Lankow",
-	"version": "19",
+	"version": "20",
 	"applications": {
 		"gecko": {
 			"id": "betterimageviewer@darktrojan.net"

@@ -21,6 +21,8 @@ if (document.toString() == '[object ImageDocument]') {
 
 			this.image = document.body.firstElementChild;
 			if (this.image.complete) {
+				this.realNaturalWidth = this.image.width;
+				this.realNaturalHeight = this.image.height;
 				this.setTitle();
 				this.zoomToFit();
 			} else {
@@ -65,18 +67,18 @@ if (document.toString() == '[object ImageDocument]') {
 			return this._currentZoom;
 		},
 		set zoom(z) {
-			delete document.body.dataset.scrolling;
+			delete document.documentElement.dataset.scrolling;
 			this.setIdle();
 
 			this._currentZoom = z;
 			this._zoomedToFit = FIT_NONE;
 			let scale = Math.pow(2, z / 4);
-			this.image.width = scale * this.image.naturalWidth;
-			this.image.height = scale * this.image.naturalHeight;
+			this.image.width = scale * this.realNaturalWidth;
+			this.image.height = scale * this.realNaturalHeight;
 
 			this.image.classList.remove('shrinkToFit');
 			this.image.classList.remove('overflowing');
-			if (z > 0 || z === 0 && (this.image.naturalWidth > document.body.clientWidth || this.image.naturalHeight > document.body.clientHeight)) {
+			if (z > 0 || z === 0 && (this.realNaturalWidth > document.body.clientWidth || this.realNaturalHeight > document.body.clientHeight)) {
 				this.image.classList.add('overflowing');
 			} else if (z < 0) {
 				this.image.classList.add('shrinkToFit');
@@ -90,16 +92,16 @@ if (document.toString() == '[object ImageDocument]') {
 			this.setTitle();
 		},
 		zoomToFit: function(which = FIT_BOTH) {
-			if (!this.image.naturalWidth || !this.image.naturalHeight) {
+			if (!this.realNaturalWidth || !this.realNaturalHeight) {
 				return;
 			}
 			let minZoomX = 0;
 			if (which == FIT_BOTH || which == FIT_WIDTH) {
-				minZoomX = (Math.log2(window.innerWidth) - Math.log2(this.image.naturalWidth)) * 4;
+				minZoomX = (Math.log2(window.innerWidth) - Math.log2(this.realNaturalWidth)) * 4;
 			}
 			let minZoomY = 0;
 			if (which == FIT_BOTH || which == FIT_HEIGHT) {
-				minZoomY = (Math.log2(window.innerHeight) - Math.log2(this.image.naturalHeight)) * 4;
+				minZoomY = (Math.log2(window.innerHeight) - Math.log2(this.realNaturalHeight)) * 4;
 			}
 			this.zoomCentered(Math.min(minZoomX, minZoomY, 0));
 			this._zoomedToFit = which;
@@ -150,15 +152,17 @@ if (document.toString() == '[object ImageDocument]') {
 		},
 		handleEvent: function(event) {
 			if (this._currentZoom === null &&
-					!!this.image.naturalWidth && !!this.image.naturalHeight) {
+					!!this.realNaturalWidth && !!this.realNaturalHeight) {
 				// At load, this is not set, but we're zoomed to fit.
-				let minZoomX = (Math.log2(window.innerWidth) - Math.log2(this.image.naturalWidth)) * 4;
-				let minZoomY = (Math.log2(window.innerHeight) - Math.log2(this.image.naturalHeight)) * 4;
+				let minZoomX = (Math.log2(window.innerWidth) - Math.log2(this.realNaturalWidth)) * 4;
+				let minZoomY = (Math.log2(window.innerHeight) - Math.log2(this.realNaturalHeight)) * 4;
 				this._currentZoom = Math.min(minZoomX, minZoomY, 0);
 			}
 
 			switch (event.type) {
 			case 'load':
+				this.realNaturalWidth = this.image.width;
+				this.realNaturalHeight = this.image.height;
 				this.setTitle();
 				this.zoomToFit();
 				break;
@@ -327,27 +331,27 @@ if (document.toString() == '[object ImageDocument]') {
 			case 'keydown':
 				switch (event.code) {
 				case 'ArrowUp':
-					document.body.dataset.scrolling = true;
+					document.documentElement.dataset.scrolling = true;
 					document.body.scrollBy(0, -100);
 					break;
 				case 'ArrowDown':
-					document.body.dataset.scrolling = true;
+					document.documentElement.dataset.scrolling = true;
 					document.body.scrollBy(0, 100);
 					break;
 				case 'ArrowLeft':
-					document.body.dataset.scrolling = true;
+					document.documentElement.dataset.scrolling = true;
 					document.body.scrollBy(-100, 0);
 					break;
 				case 'ArrowRight':
-					document.body.dataset.scrolling = true;
+					document.documentElement.dataset.scrolling = true;
 					document.body.scrollBy(100, 0);
 					break;
 				case 'PageUp':
-					document.body.dataset.scrolling = true;
+					document.documentElement.dataset.scrolling = true;
 					document.body.scrollBy(0, 0 - window.innerHeight);
 					break;
 				case 'PageDown':
-					document.body.dataset.scrolling = true;
+					document.documentElement.dataset.scrolling = true;
 					document.body.scrollBy(0, window.innerHeight);
 					break;
 				}
@@ -363,7 +367,6 @@ if (document.toString() == '[object ImageDocument]') {
 				}
 				break;
 			case 'scroll':
-				delete document.body.dataset.scrolling;
 				this._lastScrollLeft = document.body.scrollLeft;
 				this._lastScrollTop = document.body.scrollTop;
 
