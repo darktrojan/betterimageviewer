@@ -4,6 +4,7 @@ if (document.toString() == '[object ImageDocument]') {
 	const FIT_WIDTH = 1;
 	const FIT_HEIGHT = 2;
 	const FIT_BOTH = 3;
+	const FIT_BOTH_INIT = 4;
 	let BetterImageViewer = {
 		_currentZoom: null,
 		_zoomedToFit: FIT_BOTH,
@@ -22,7 +23,7 @@ if (document.toString() == '[object ImageDocument]') {
 			this.image = document.body.firstElementChild;
 			if (this.image.complete) {
 				this.setTitle();
-				this.zoomToFit();
+				this.zoomToFit(FIT_BOTH_INIT);
 			} else {
 				this.image.addEventListener('load', this);
 			}
@@ -93,15 +94,26 @@ if (document.toString() == '[object ImageDocument]') {
 			if (!this.image.naturalWidth || !this.image.naturalHeight) {
 				return;
 			}
-			let minZoomX = 0;
-			if (which == FIT_BOTH || which == FIT_WIDTH) {
-				minZoomX = (Math.log2(window.innerWidth) - Math.log2(this.image.naturalWidth)) * 4;
+
+			let minZoomX = (Math.log2(window.innerWidth) - Math.log2(this.image.naturalWidth)) * 4;
+			let minZoomY = (Math.log2(window.innerHeight) - Math.log2(this.image.naturalHeight)) * 4;
+
+			let z = 0;
+			if (which == FIT_WIDTH) {
+				z = minZoomX;
 			}
-			let minZoomY = 0;
-			if (which == FIT_BOTH || which == FIT_HEIGHT) {
-				minZoomY = (Math.log2(window.innerHeight) - Math.log2(this.image.naturalHeight)) * 4;
+			else if (which == FIT_HEIGHT) {
+				z = minZoomY;
 			}
-			this.zoomCentered(Math.min(minZoomX, minZoomY, 0));
+			else {
+				z = Math.min(minZoomX, minZoomY);
+				if (which == FIT_BOTH_INIT) {
+					// Shrink images upon first load if necessary, but don't expand them
+					z = Math.min(z, 0);
+				}
+			}
+
+			this.zoomCentered(z);
 			this._zoomedToFit = which;
 		},
 		zoomCentered: function(z) {
@@ -160,7 +172,7 @@ if (document.toString() == '[object ImageDocument]') {
 			switch (event.type) {
 			case 'load':
 				this.setTitle();
-				this.zoomToFit();
+				this.zoomToFit(FIT_BOTH_INIT);
 				break;
 			case 'error':
 				console.error(event);
