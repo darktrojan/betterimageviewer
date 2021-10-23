@@ -111,7 +111,7 @@ if (document.toString() == '[object ImageDocument]') {
 			let y = bcr.top <= 0 ? ((clientHeight / 2 - bcr.top) / bcr.height) : 0.5;
 			this.zoom = z;
 			bcr = this.image.getBoundingClientRect();
-			document.body.scrollTo(x * bcr.width - clientWidth / 2, y * bcr.height - clientHeight / 2);
+			window.scrollTo(x * bcr.width - clientWidth / 2, y * bcr.height - clientHeight / 2);
 		},
 		get currentZoomPlus1() {
 			let fractional = this.zoom % 1;
@@ -180,12 +180,13 @@ if (document.toString() == '[object ImageDocument]') {
 
 				// Undo click listener.
 				this.zoom = this._currentZoom;
-				document.body.scrollTo(this._lastScrollLeft, this._lastScrollTop);
+				window.scrollTo(this._lastScrollLeft * -1, this._lastScrollTop * -1);
 
 				if (!!this._justScrolled) {
 					this._justScrolled = false;
 					return;
 				}
+
 				if (event.target.localName == 'button') {
 					switch (event.target.id) {
 					case 'zoomIn':
@@ -212,16 +213,16 @@ if (document.toString() == '[object ImageDocument]') {
 					}
 				} else if (event.target == this._scrollX.parentNode) {
 					if (event.clientX < this._scrollX.offsetLeft) {
-						document.body.scrollBy(-window.innerWidth, 0);
+						window.scrollBy(-window.innerWidth, 0);
 					} else {
-						document.body.scrollBy(window.innerWidth, 0);
+						window.scrollBy(window.innerWidth, 0);
 					}
 					return;
 				} else if (event.target == this._scrollY.parentNode) {
 					if (event.clientY < this._scrollY.offsetTop) {
-						document.body.scrollBy(0, -window.innerHeight);
+						window.scrollBy(0, -window.innerHeight);
 					} else {
-						document.body.scrollBy(0, window.innerHeight);
+						window.scrollBy(0, window.innerHeight);
 					}
 					return;
 				} else if (event.target == this._scrollX || event.target == this._scrollY) {
@@ -256,7 +257,7 @@ if (document.toString() == '[object ImageDocument]') {
 				}
 
 				bcr = this.image.getBoundingClientRect();
-				document.body.scrollTo(bcr.width * x - event.clientX, bcr.height * y - event.clientY);
+				window.scrollTo(bcr.width * x - event.clientX, bcr.height * y - event.clientY);
 
 				event.preventDefault();
 				break;
@@ -285,12 +286,13 @@ if (document.toString() == '[object ImageDocument]') {
 					return;
 				}
 				if (this._scrolling == this._scrollX) {
-					document.body.scrollBy(-dX * this.image.width / window.innerWidth, 0);
+					window.scrollBy(-dX * this.image.width / window.innerWidth, 0);
 				} else if (this._scrolling == this._scrollY) {
-					document.body.scrollBy(0, -dY * this.image.height / window.innerHeight);
+					window.scrollBy(0, -dY * this.image.height / window.innerHeight);
 				} else {
-					document.body.scrollBy(dX, dY);
+					window.scrollBy(dX, dY);
 				}
+
 				this._lastMousePosition = { x: event.clientX, y: event.clientY };
 				this._justScrolled = true;
 				event.preventDefault();
@@ -328,27 +330,27 @@ if (document.toString() == '[object ImageDocument]') {
 				switch (event.code) {
 				case 'ArrowUp':
 					document.documentElement.dataset.scrolling = true;
-					document.body.scrollBy(0, -100);
+					window.scrollBy(0, -100);
 					break;
 				case 'ArrowDown':
 					document.documentElement.dataset.scrolling = true;
-					document.body.scrollBy(0, 100);
+					window.scrollBy(0, 100);
 					break;
 				case 'ArrowLeft':
 					document.documentElement.dataset.scrolling = true;
-					document.body.scrollBy(-100, 0);
+					window.scrollBy(-100, 0);
 					break;
 				case 'ArrowRight':
 					document.documentElement.dataset.scrolling = true;
-					document.body.scrollBy(100, 0);
+					window.scrollBy(100, 0);
 					break;
 				case 'PageUp':
 					document.documentElement.dataset.scrolling = true;
-					document.body.scrollBy(0, 0 - window.innerHeight);
+					window.scrollBy(0, 0 - window.innerHeight);
 					break;
 				case 'PageDown':
 					document.documentElement.dataset.scrolling = true;
-					document.body.scrollBy(0, window.innerHeight);
+					window.scrollBy(0, window.innerHeight);
 					break;
 				}
 				break;
@@ -362,12 +364,13 @@ if (document.toString() == '[object ImageDocument]') {
 					this.setScrollbars();
 				}
 				break;
-			case 'scroll':
-				this._lastScrollLeft = document.body.scrollLeft;
-				this._lastScrollTop = document.body.scrollTop;
-
+			case 'scroll': {
+				const bcr = document.body.getBoundingClientRect()
+				this._lastScrollLeft = bcr.left;
+				this._lastScrollTop = bcr.top;
 				this.setScrollbars();
 				break;
+			}
 			}
 		},
 		setTitle: function() {
@@ -386,9 +389,9 @@ if (document.toString() == '[object ImageDocument]') {
 			}
 
 			this._scrollX.style.width = (innerWidth / width * 100) + '%';
-			this._scrollX.style.left = (this._lastScrollLeft / width * 100) + '%';
+			this._scrollX.style.left = (this._lastScrollLeft * -1 / width * 100) + '%';
 			this._scrollY.style.height = (innerHeight / height * 100) + '%';
-			this._scrollY.style.top = (this._lastScrollTop / height * 100) + '%';
+			this._scrollY.style.top = (this._lastScrollTop * -1 / height * 100) + '%';
 		},
 		setIdle: function() {
 			if (this._idleTimeout) {

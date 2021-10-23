@@ -1,3 +1,9 @@
+html, body {
+	width: 100% !important;
+	height: 100% !important;
+	display: block !important;
+	position: absolute !important;
+}
 :root[data-scrolling] {
 	scroll-behavior: smooth;
 }
