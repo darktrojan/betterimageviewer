@@ -12,6 +12,23 @@ if (document.toString() == '[object ImageDocument]') {
 		_justScrolled: false,
 		_title: null,
 		init: function() {
+			// force style only for images
+			if (document.contentType.startsWith("image/")) {
+				const style = document.createElement("style");
+				// allow images smaller than viewport be centered properly
+				style.textContent = `
+					@media not print {
+						html, body {
+							width: 100% !important;
+							height: 100% !important;
+							display: block !important;
+							position: absolute !important;
+						}
+					}
+				`;
+				document.head.appendChild(style);
+			}
+
 			document.addEventListener('error', this);
 
 			let link = document.createElement('link');
@@ -111,7 +128,7 @@ if (document.toString() == '[object ImageDocument]') {
 			let y = bcr.top <= 0 ? ((clientHeight / 2 - bcr.top) / bcr.height) : 0.5;
 			this.zoom = z;
 			bcr = this.image.getBoundingClientRect();
-			document.body.scrollTo(x * bcr.width - clientWidth / 2, y * bcr.height - clientHeight / 2);
+			window.scrollTo(x * bcr.width - clientWidth / 2, y * bcr.height - clientHeight / 2);
 		},
 		get currentZoomPlus1() {
 			let fractional = this.zoom % 1;
@@ -150,7 +167,7 @@ if (document.toString() == '[object ImageDocument]') {
 		},
 		handleEvent: function(event) {
 			if (this._currentZoom === null &&
-					!!this.image.naturalWidth && !!this.image.naturalHeight) {
+				!!this.image.naturalWidth && !!this.image.naturalHeight) {
 				// At load, this is not set, but we're zoomed to fit.
 				let minZoomX = (Math.log2(window.innerWidth) - Math.log2(this.image.naturalWidth)) * 4;
 				let minZoomY = (Math.log2(window.innerHeight) - Math.log2(this.image.naturalHeight)) * 4;
@@ -158,216 +175,219 @@ if (document.toString() == '[object ImageDocument]') {
 			}
 
 			switch (event.type) {
-			case 'load':
-				this.setTitle();
-				this.zoomToFit();
-				break;
-			case 'error':
-				console.error(event);
-				break;
-			case 'click':
-				if (event.button !== 0) {
-					return;
-				}
+				case 'load':
+					this.setTitle();
+					this.zoomToFit();
+					break;
+				case 'error':
+					console.error(event);
+					break;
+				case 'click':
+					if (event.button !== 0) {
+						return;
+					}
 
-				if (event.eventPhase == Event.CAPTURING_PHASE) {
+					if (event.eventPhase == Event.CAPTURING_PHASE) {
+						let bcr = this.image.getBoundingClientRect();
+						let x = (event.clientX - bcr.left) / bcr.width;
+						let y = (event.clientY - bcr.top) / bcr.height;
+						this._clickData = { x, y };
+						return;
+					}
+
+					// Undo click listener.
+					this.zoom = this._currentZoom;
+					window.scrollTo(this._lastScrollLeft * -1, this._lastScrollTop * -1);
+
+					if (!!this._justScrolled) {
+						this._justScrolled = false;
+						return;
+					}
+
+					if (event.target.localName == 'button') {
+						switch (event.target.id) {
+							case 'zoomIn':
+								this.zoomCentered(this.currentZoomPlus1);
+								return;
+							case 'zoomOut':
+								this.zoomCentered(this.currentZoomMinus1);
+								return;
+							case 'zoom1':
+								this.zoomCentered(0);
+								return;
+							case 'zoomFit':
+								this.zoomToFit();
+								return;
+							case 'zoomFitWidth':
+								this.zoomToFit(FIT_WIDTH);
+								return;
+							case 'zoomFitHeight':
+								this.zoomToFit(FIT_HEIGHT);
+								return;
+							case 'donate':
+								window.open('https://darktrojan.github.io/donate.html?betterimageviewer');
+								return;
+						}
+					} else if (event.target == this._scrollX.parentNode) {
+						if (event.clientX < this._scrollX.offsetLeft) {
+							window.scrollBy(-window.innerWidth, 0);
+						} else {
+							window.scrollBy(window.innerWidth, 0);
+						}
+						return;
+					} else if (event.target == this._scrollY.parentNode) {
+						if (event.clientY < this._scrollY.offsetTop) {
+							window.scrollBy(0, -window.innerHeight);
+						} else {
+							window.scrollBy(0, window.innerHeight);
+						}
+						return;
+					} else if (event.target == this._scrollX || event.target == this._scrollY) {
+						return;
+					}
+
+					if (this.zoom === 0) {
+						this.zoomToFit();
+						return;
+					}
+				/* falls through */
+				case 'wheel':
 					let bcr = this.image.getBoundingClientRect();
 					let x = (event.clientX - bcr.left) / bcr.width;
 					let y = (event.clientY - bcr.top) / bcr.height;
-					this._clickData = { x, y };
-					return;
-				}
 
-				// Undo click listener.
-				this.zoom = this._currentZoom;
-				document.body.scrollTo(this._lastScrollLeft, this._lastScrollTop);
-
-				if (!!this._justScrolled) {
-					this._justScrolled = false;
-					return;
-				}
-				if (event.target.localName == 'button') {
-					switch (event.target.id) {
-					case 'zoomIn':
-						this.zoomCentered(this.currentZoomPlus1);
-						return;
-					case 'zoomOut':
-						this.zoomCentered(this.currentZoomMinus1);
-						return;
-					case 'zoom1':
-						this.zoomCentered(0);
-						return;
-					case 'zoomFit':
-						this.zoomToFit();
-						return;
-					case 'zoomFitWidth':
-						this.zoomToFit(FIT_WIDTH);
-						return;
-					case 'zoomFitHeight':
-						this.zoomToFit(FIT_HEIGHT);
-						return;
-					case 'donate':
-						window.open('https://darktrojan.github.io/donate.html?betterimageviewer');
-						return;
-					}
-				} else if (event.target == this._scrollX.parentNode) {
-					if (event.clientX < this._scrollX.offsetLeft) {
-						document.body.scrollBy(-window.innerWidth, 0);
+					if (event.type == 'click') {
+						this.zoom = 0;
+						x = this._clickData.x;
+						y = this._clickData.y;
+						delete this._clickData;
 					} else {
-						document.body.scrollBy(window.innerWidth, 0);
+						if (event.timeStamp - this._lastWheel < 50) {
+							return;
+						}
+						this._lastWheel = event.timeStamp;
+						if (event.deltaY < 0) {
+							this.zoom = this.currentZoomPlus1;
+						} else {
+							this.zoom = this.currentZoomMinus1;
+						}
 					}
-					return;
-				} else if (event.target == this._scrollY.parentNode) {
-					if (event.clientY < this._scrollY.offsetTop) {
-						document.body.scrollBy(0, -window.innerHeight);
-					} else {
-						document.body.scrollBy(0, window.innerHeight);
+
+					bcr = this.image.getBoundingClientRect();
+					window.scrollTo(bcr.width * x - event.clientX, bcr.height * y - event.clientY);
+
+					event.preventDefault();
+					break;
+				case 'mousedown':
+					if (event.button === 0 && !event.shiftKey) {
+						this._lastMousePosition = { x: event.clientX, y: event.clientY };
+						this._scrolling = event.target;
+						window.addEventListener('mouseup', this);
+						event.preventDefault();
 					}
-					return;
-				} else if (event.target == this._scrollX || event.target == this._scrollY) {
-					return;
-				}
-
-				if (this.zoom === 0) {
-					this.zoomToFit();
-					return;
-				}
-				/* falls through */
-			case 'wheel':
-				let bcr = this.image.getBoundingClientRect();
-				let x = (event.clientX - bcr.left) / bcr.width;
-				let y = (event.clientY - bcr.top) / bcr.height;
-
-				if (event.type == 'click') {
-					this.zoom = 0;
-					x = this._clickData.x;
-					y = this._clickData.y;
-					delete this._clickData;
-				} else {
-					if (event.timeStamp - this._lastWheel < 50) {
+					break;
+				case 'mousemove':
+					if (event.button !== 0) {
 						return;
 					}
-					this._lastWheel = event.timeStamp;
-					if (event.deltaY < 0) {
-						this.zoom = this.currentZoomPlus1;
-					} else {
-						this.zoom = this.currentZoomMinus1;
+
+					this.setIdle();
+
+					if (!this._scrolling) {
+						return;
 					}
-				}
 
-				bcr = this.image.getBoundingClientRect();
-				document.body.scrollTo(bcr.width * x - event.clientX, bcr.height * y - event.clientY);
+					let dX = this._lastMousePosition.x - event.clientX;
+					let dY = this._lastMousePosition.y - event.clientY;
+					if (Math.hypot(dX, dY) < 5) {
+						return;
+					}
+					if (this._scrolling == this._scrollX) {
+						window.scrollBy(-dX * this.image.width / window.innerWidth, 0);
+					} else if (this._scrolling == this._scrollY) {
+						window.scrollBy(0, -dY * this.image.height / window.innerHeight);
+					} else {
+						window.scrollBy(dX, dY);
+					}
 
-				event.preventDefault();
-				break;
-			case 'mousedown':
-				if (event.button === 0 && !event.shiftKey) {
 					this._lastMousePosition = { x: event.clientX, y: event.clientY };
-					this._scrolling = event.target;
-					window.addEventListener('mouseup', this);
-					event.preventDefault();
-				}
-				break;
-			case 'mousemove':
-				if (event.button !== 0) {
-					return;
-				}
-
-				this.setIdle();
-
-				if (!this._scrolling) {
-					return;
-				}
-
-				let dX = this._lastMousePosition.x - event.clientX;
-				let dY = this._lastMousePosition.y - event.clientY;
-				if (Math.hypot(dX, dY) < 5) {
-					return;
-				}
-				if (this._scrolling == this._scrollX) {
-					document.body.scrollBy(-dX * this.image.width / window.innerWidth, 0);
-				} else if (this._scrolling == this._scrollY) {
-					document.body.scrollBy(0, -dY * this.image.height / window.innerHeight);
-				} else {
-					document.body.scrollBy(dX, dY);
-				}
-				this._lastMousePosition = { x: event.clientX, y: event.clientY };
-				this._justScrolled = true;
-				event.preventDefault();
-				break;
-			case 'mouseup':
-				this._lastMousePosition = null;
-				this._scrolling = null;
-				window.removeEventListener('mouseup', this);
-				break;
-			case 'keypress':
-				switch (event.code) {
-				case 'Minus':
-				case 'NumpadSubtract':
-					this.zoomCentered(this.currentZoomMinus1);
+					this._justScrolled = true;
 					event.preventDefault();
 					break;
-				case 'Equal':
-				case 'NumpadAdd':
-					this.zoomCentered(this.currentZoomPlus1);
+				case 'mouseup':
+					this._lastMousePosition = null;
+					this._scrolling = null;
+					window.removeEventListener('mouseup', this);
+					break;
+				case 'keypress':
+					switch (event.code) {
+						case 'Minus':
+						case 'NumpadSubtract':
+							this.zoomCentered(this.currentZoomMinus1);
+							event.preventDefault();
+							break;
+						case 'Equal':
+						case 'NumpadAdd':
+							this.zoomCentered(this.currentZoomPlus1);
+							event.preventDefault();
+							break;
+						case 'Digit0':
+						case 'Numpad0':
+							this.zoomToFit();
+							event.preventDefault();
+							break;
+						case 'Digit1':
+						case 'Numpad1':
+							this.zoomCentered(0);
+							event.preventDefault();
+							break;
+					}
+					break;
+				case 'keydown':
+					switch (event.code) {
+						case 'ArrowUp':
+							document.documentElement.dataset.scrolling = true;
+							window.scrollBy(0, -100);
+							break;
+						case 'ArrowDown':
+							document.documentElement.dataset.scrolling = true;
+							window.scrollBy(0, 100);
+							break;
+						case 'ArrowLeft':
+							document.documentElement.dataset.scrolling = true;
+							window.scrollBy(-100, 0);
+							break;
+						case 'ArrowRight':
+							document.documentElement.dataset.scrolling = true;
+							window.scrollBy(100, 0);
+							break;
+						case 'PageUp':
+							document.documentElement.dataset.scrolling = true;
+							window.scrollBy(0, 0 - window.innerHeight);
+							break;
+						case 'PageDown':
+							document.documentElement.dataset.scrolling = true;
+							window.scrollBy(0, window.innerHeight);
+							break;
+					}
+					break;
+				case 'resize':
 					event.preventDefault();
+					event.stopPropagation();
+					if (this._zoomedToFit) {
+						this.zoomToFit(this._zoomedToFit);
+					} else {
+						this.zoomCentered(this.zoom);
+						this.setScrollbars();
+					}
 					break;
-				case 'Digit0':
-				case 'Numpad0':
-					this.zoomToFit();
-					event.preventDefault();
-					break;
-				case 'Digit1':
-				case 'Numpad1':
-					this.zoomCentered(0);
-					event.preventDefault();
-					break;
-				}
-				break;
-			case 'keydown':
-				switch (event.code) {
-				case 'ArrowUp':
-					document.documentElement.dataset.scrolling = true;
-					document.body.scrollBy(0, -100);
-					break;
-				case 'ArrowDown':
-					document.documentElement.dataset.scrolling = true;
-					document.body.scrollBy(0, 100);
-					break;
-				case 'ArrowLeft':
-					document.documentElement.dataset.scrolling = true;
-					document.body.scrollBy(-100, 0);
-					break;
-				case 'ArrowRight':
-					document.documentElement.dataset.scrolling = true;
-					document.body.scrollBy(100, 0);
-					break;
-				case 'PageUp':
-					document.documentElement.dataset.scrolling = true;
-					document.body.scrollBy(0, 0 - window.innerHeight);
-					break;
-				case 'PageDown':
-					document.documentElement.dataset.scrolling = true;
-					document.body.scrollBy(0, window.innerHeight);
-					break;
-				}
-				break;
-			case 'resize':
-				event.preventDefault();
-				event.stopPropagation();
-				if (this._zoomedToFit) {
-					this.zoomToFit(this._zoomedToFit);
-				} else {
-					this.zoomCentered(this.zoom);
+				case 'scroll': {
+					const bcr = document.body.getBoundingClientRect()
+					this._lastScrollLeft = bcr.left;
+					this._lastScrollTop = bcr.top;
 					this.setScrollbars();
+					break;
 				}
-				break;
-			case 'scroll':
-				this._lastScrollLeft = document.body.scrollLeft;
-				this._lastScrollTop = document.body.scrollTop;
-
-				this.setScrollbars();
-				break;
 			}
 		},
 		setTitle: function() {
@@ -386,9 +406,9 @@ if (document.toString() == '[object ImageDocument]') {
 			}
 
 			this._scrollX.style.width = (innerWidth / width * 100) + '%';
-			this._scrollX.style.left = (this._lastScrollLeft / width * 100) + '%';
+			this._scrollX.style.left = (this._lastScrollLeft * -1 / width * 100) + '%';
 			this._scrollY.style.height = (innerHeight / height * 100) + '%';
-			this._scrollY.style.top = (this._lastScrollTop / height * 100) + '%';
+			this._scrollY.style.top = (this._lastScrollTop * -1 / height * 100) + '%';
 		},
 		setIdle: function() {
 			if (this._idleTimeout) {
